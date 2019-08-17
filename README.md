@@ -8,6 +8,8 @@ Wish machine is an issue tracker for the fictional free to play video game Unico
 
 Users can purchase wishes for real money, which can be spent on feature requests to guide and help fund the development of the game.
 
+[![Build Status](https://travis-ci.org/ASquirrelsTail/issue-tracker.svg?branch=master)](https://travis-ci.org/ASquirrelsTail/issue-tracker)
+
 ## UX
 
 ## Features
