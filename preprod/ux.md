@@ -74,7 +74,7 @@ Relationship diagram created with [dbdiagram.io](https://dbdiagram.io/).
 
 ### Site Map
 
-![alt text](https://raw.githubusercontent.com/ASquirrelsTail/issue-tracker/master/preprod/db-relationships.png "Site map")
+![alt text](https://raw.githubusercontent.com/ASquirrelsTail/issue-tracker/master/preprod/site-map.png "Site map")
 
 ## Wireframes
 
@@ -86,7 +86,7 @@ The visual style of the site should reflect the playful design of Unicorn Attrac
 
 ![alt text](https://raw.githubusercontent.com/ASquirrelsTail/issue-tracker/master/preprod/monokai.png "Monokai colour palette")
 
-![alt text](https://raw.githubusercontent.com/ASquirrelsTail/issue-tracker/master/preprod/gradient.png "Example gradient")
+![alt text](https://raw.githubusercontent.com/ASquirrelsTail/issue-tracker/master/preprod/gradient.jpg "Example gradient")
 
 Nunito will be the primary font for headings, a clear, slightly sans serif font with rounded corners. It pairs nicely with Montserrat for the body text.
 
