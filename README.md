@@ -12,6 +12,8 @@ Users can purchase wishes for real money, which can be spent on feature requests
 
 ## UX
 
+A full breakdown of the UX process can be found [here](https://github.com/ASquirrelsTail/issue-tracker/blob/master/preprod/ux.md).
+
 ## Features
 
 ### Existing Features
