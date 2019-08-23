@@ -10,6 +10,9 @@ from django.contrib.auth.views import LoginView
 
 
 class NotLoggedInMixin(UserPassesTestMixin):
+    '''
+    Mixin to check if a user is logged in, and return a 403 Forbidden error if they are.
+    '''
     raise_exception = True
 
     def test_func(self):
@@ -17,6 +20,9 @@ class NotLoggedInMixin(UserPassesTestMixin):
 
 
 class LogIn(NotLoggedInMixin, LoginView):
+    '''
+    Log in view requiring the user not to be logged in.
+    '''
     pass
 
 
@@ -37,5 +43,5 @@ class SignUp(NotLoggedInMixin, View):
             if user:
                 auth.login(user=user, request=request)
                 return redirect(LOGIN_REDIRECT_URL)
-        else:
-            return self.get(request, signup_form)
+
+        return self.get(request, signup_form)
