@@ -3,11 +3,24 @@ from django.views import View
 from account.forms import UserSignUpForm
 from django.contrib import auth
 from issue_tracker.settings import LOGIN_REDIRECT_URL
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth.views import LoginView
 
 # Create your views here.
 
 
-class SignUp(View):
+class NotLoggedInMixin(UserPassesTestMixin):
+    raise_exception = True
+
+    def test_func(self):
+        return not self.request.user.is_authenticated
+
+
+class LogIn(NotLoggedInMixin, LoginView):
+    pass
+
+
+class SignUp(NotLoggedInMixin, View):
     '''
     View to sign up new users
     '''

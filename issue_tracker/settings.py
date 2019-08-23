@@ -138,5 +138,6 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'), )
 
 # URL users are redirected to after they log in and out if no next URL is specified
 
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = 'index'
+LOGOUT_REDIRECT_URL = 'index'
+LOGIN_URL = 'login'
