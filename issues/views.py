@@ -11,11 +11,18 @@ from issues.models import Issue
 
 
 class IssuesListView(ListView):
+    '''
+    List view for displaying issues.
+    '''
     model = Issue
     template_name = 'issue_list.html'
 
 
 class IssueView(DetailView):
+    '''
+    Detail view for displaying individual issues.
+    Increases issue's view count on load.
+    '''
     queryset = Issue.objects.all()
     template_name = 'issue_detail.html'
 
@@ -27,6 +34,10 @@ class IssueView(DetailView):
 
 
 class AddIssueView(LoginRequiredMixin, CreateView):
+    '''
+    View to add a new issue with title and content.
+    Sets the issue's user to the user making the request.
+    '''
     model = Issue
     fields = ['title', 'content']
     template_name = 'add_issue.html'
@@ -38,7 +49,8 @@ class AddIssueView(LoginRequiredMixin, CreateView):
 
 class SetIssueStatusView(SingleObjectMixin, PermissionRequiredMixin, View):
     '''
-    View that sets an Issue's 'approved' field to now.
+    View that sets an Issue's status field to now.
+    Can only be accessed by users with the can_update_status permission.
     '''
     model = Issue
     permission_required = 'issues.can_update_status'
@@ -47,6 +59,10 @@ class SetIssueStatusView(SingleObjectMixin, PermissionRequiredMixin, View):
     status_field = 'approved'
 
     def post(self, request, pk):
+        '''
+        On Post sets the given status field of an issue to the current time, if it is not already set.
+        Redirects to the issue's page.
+        '''
         issue = self.get_object()
         if getattr(issue, self.status_field) is None:
             setattr(issue, self.status_field, datetime.datetime.now())
