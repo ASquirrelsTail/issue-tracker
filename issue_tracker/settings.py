@@ -34,6 +34,7 @@ ALLOWED_HOSTS = [os.environ.get('HOST_NAME', 'localhost')]
 INSTALLED_APPS = [
     'bootstrap4',
     'account',
+    'issues',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
