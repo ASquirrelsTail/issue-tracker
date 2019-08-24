@@ -4,6 +4,6 @@ from account.views import SignUp, LogIn
 
 urlpatterns = [
     url(r'^', include(auth_urls)),
-    url(r'^sign-up$', SignUp.as_view(), name='signup'),
-    url(r'^login$', LogIn.as_view(), name='login'),
+    url(r'^sign-up/$', SignUp.as_view(), name='signup'),
+    url(r'^login/$', LogIn.as_view(), name='login'),
 ]

@@ -32,14 +32,15 @@ ALLOWED_HOSTS = [os.environ.get('HOST_NAME', 'localhost')]
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    'bootstrap4',
+    'account',
+    
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'bootstrap4',
-    'account',
+    'django.contrib.admin',
 ]
 
 MIDDLEWARE = [
@@ -141,3 +142,7 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'), )
 LOGIN_REDIRECT_URL = 'index'
 LOGOUT_REDIRECT_URL = 'index'
 LOGIN_URL = 'login'
+
+# Sent emails will be printed to the console.
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
