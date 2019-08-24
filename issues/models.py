@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 # Create your models here.
 
@@ -16,6 +17,9 @@ class Issue(models.Model):
 
     def __str__(self):
         return '{0} - {1}'.format(self.id, self.title)
+
+    def get_absolute_url(self):
+        return reverse('issue', kwargs={'pk': self.pk})
 
 
 class Label(models.Model):
