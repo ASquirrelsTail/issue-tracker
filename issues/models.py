@@ -15,6 +15,9 @@ class Issue(models.Model):
     done = models.DateTimeField(null=True, default=None)
     views = models.IntegerField(default=0)
 
+    class Meta:
+        permissions = (('can_update_status', 'Update Issue status.'),)
+
     def __str__(self):
         return '{0} - {1}'.format(self.id, self.title)
 
