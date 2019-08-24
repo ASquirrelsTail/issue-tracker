@@ -1,0 +1,11 @@
+{% load bootstrap4 %}
+<p>Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>.</p>
+<form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    {% buttons %}
+    <button type="submit" class="btn btn-primary">Log In</button>
+    {% endbuttons %}
+    <input type="hidden" name="next" value="{{ next }}" />
+</form>
+<p><a href="{% url 'password_reset' %}">Lost password?</a></p>

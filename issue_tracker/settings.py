@@ -34,7 +34,6 @@ ALLOWED_HOSTS = [os.environ.get('HOST_NAME', 'localhost')]
 INSTALLED_APPS = [
     'bootstrap4',
     'account',
-    
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -66,6 +65,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'account.contexts.modal_login_form'
             ],
         },
     },
