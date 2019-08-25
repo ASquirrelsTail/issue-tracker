@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load bootstrap4 %}
+{% block title %}Edit Issue{% endblock %}
+{% block content %}
+<h1>Edit Issue</h1>
+<form method="post" action="{% url 'edit-issue' pk=object.id %}">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    {% buttons %}
+    <button type="submit" class="btn btn-primary">Save Edit</button>
+    {% endbuttons %}
+</form>
+{% endblock %}

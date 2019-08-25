@@ -65,6 +65,21 @@ class AddIssueView(LoginRequiredMixin, CreateView):
         return super(AddIssueView, self).form_valid(form)
 
 
+class EditIssueView(AuthorOrAdminMixin, UpdateView):
+    '''
+    View to edit a comment.
+    Sets the edited date to now on save.
+    '''
+    permission_required = 'issues.can_edit_all_issues'
+    model = Issue
+    fields = ['title', 'content']
+    template_name = 'edit_issue.html'
+
+    def form_valid(self, form):
+        form.instance.edited = datetime.datetime.now()
+        return super(EditIssueView, self).form_valid(form)
+
+
 class SetIssueStatusView(SingleObjectMixin, PermissionRequiredMixin, View):
     '''
     View that sets an Issue's status field to now.

@@ -10,13 +10,15 @@ class Issue(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
+    edited = models.DateTimeField(null=True, default=None)
     approved = models.DateTimeField(null=True, default=None)
     doing = models.DateTimeField(null=True, default=None)
     done = models.DateTimeField(null=True, default=None)
     views = models.IntegerField(default=0)
 
     class Meta:
-        permissions = (('can_update_status', 'Update Issue status.'),)
+        permissions = (('can_update_status', 'Update Issue status.'),
+                       ('can_edit_all_issues', 'Edit any user\'s issue'),)
 
     def __str__(self):
         return '{0} - {1}'.format(self.id, self.title)

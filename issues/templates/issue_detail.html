@@ -5,27 +5,35 @@
 <h1>{{ object }}</h1>
 <p>Views: {{ object.views }}</p>
 {{ object.content|linebreaks }}
-{% if object.approved is None %}
-    <form action="{% url 'approve-issue' pk=object.id %}" method="post">
-        {% csrf_token %}
-        {% buttons %}
-        <button type="submit" class="btn btn-primary">Approve</button>
-        {% endbuttons %}
-    </form>
-{% elif object.doing is None %}
-    <form action="{% url 'doing-issue' pk=object.id %}" method="post">
-        {% csrf_token %}
-        {% buttons %}
-        <button type="submit" class="btn btn-primary">Doing</button>
-        {% endbuttons %}
-    </form>
-{% elif object.done is None %}
-    <form action="{% url 'done-issue' pk=object.id %}" method="post">
-        {% csrf_token %}
-        {% buttons %}
-        <button type="submit" class="btn btn-primary">Done</button>
-        {% endbuttons %}
-    </form>
+{% if object.edited %}
+    <p>Last edit {{ object.edited|date:'d/m/y H:i' }}</p>
+{% endif %}
+{% if object.user == user or perms.issues.can_edit_all_issues %}
+    <a href="{% url 'edit-issue' pk=object.id %}" class="btn btn-primary">Edit Issue</a>
+{% endif %}
+{% if perms.issues.can_update_issue_status %}
+    {% if object.approved is None %}
+        <form action="{% url 'approve-issue' pk=object.id %}" method="post">
+            {% csrf_token %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Approve</button>
+            {% endbuttons %}
+        </form>
+    {% elif object.doing is None %}
+        <form action="{% url 'doing-issue' pk=object.id %}" method="post">
+            {% csrf_token %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Doing</button>
+            {% endbuttons %}
+        </form>
+    {% elif object.done is None %}
+        <form action="{% url 'done-issue' pk=object.id %}" method="post">
+            {% csrf_token %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Done</button>
+            {% endbuttons %}
+        </form>
+    {% endif %}
 {% endif %}
 {% if object.comments %}
     <h2>Comments:</h2>
@@ -34,6 +42,9 @@
     <blockquote id="comment-{{ comment.id }}">
         <p>Comment by {{ comment.user }} at {{ comment.created|date:'d/m/y H:i' }}</p>
         {{ comment.content|linebreaks }}
+        {% if comment.edited %}
+        <p>Last edit {{ comment.edited|date:'d/m/y H:i' }}</p>
+        {% endif %}
         {% if comment.user == user or perms.issues.can_edit_all_comments %}
         <a href="{% url 'edit-comment' issue_pk=object.id pk=comment.id %}" class="btn btn-primary">Edit Comment</a>
         {% endif %}
