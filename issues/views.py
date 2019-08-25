@@ -33,7 +33,8 @@ class IssuesListView(ListView):
 class IssueView(DetailView):
     '''
     Detail view for displaying individual issues.
-    Increases issue's view count on load.
+    Increases issue's view count and gets comments on load.
+    Inserts comment form into context.
     '''
     queryset = Issue.objects.all()
     template_name = 'issue_detail.html'
@@ -42,7 +43,9 @@ class IssueView(DetailView):
         issue = super(IssueView, self).get_object(queryset)
         issue.views += 1
         issue.save()
-        issue.comments = issue.comment_set.all()
+        issue.comments = issue.comment_set.filter(reply_to=None)  # Is this the best way to do this?
+        for comment in issue.comments:
+            comment.replies = issue.comment_set.filter(reply_to=comment)
         return issue
 
     def get_context_data(self, **kwargs):

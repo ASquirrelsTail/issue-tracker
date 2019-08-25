@@ -10,6 +10,6 @@ urlpatterns = [
     url(r'^add/$', AddIssueView.as_view(), name='add-issue'),
     url(r'^(?P<pk>[0-9]+)/edit/$', EditIssueView.as_view(), name='edit-issue'),
     url(r'^(?P<issue_pk>[0-9]+)/comments/add/$', AddCommentView.as_view(), name='add-comment'),
-    url(r'^(?P<issue_pk>[0-9]+)/comments/(?P<comment_pk>[0-9]+)/add/$', AddCommentView.as_view(), name='add-reply'),
+    url(r'^(?P<issue_pk>[0-9]+)/comments/(?P<comment_pk>[0-9]+)/reply/$', AddCommentView.as_view(), name='add-reply'),
     url(r'^(?P<issue_pk>[0-9]+)/comments/(?P<pk>[0-9]+)/edit/$', EditCommentView.as_view(), name='edit-comment'),
 ]
