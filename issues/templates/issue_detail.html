@@ -4,7 +4,7 @@
 {% block content %}
 <h1>{{ object }}</h1>
 <p>Views: {{ object.views }}</p>
-<p>{{ object.content|linebreaks }}</p>
+{{ object.content|linebreaks }}
 {% if object.approved is None %}
     <form action="{% url 'approve-issue' pk=object.id %}" method="post">
         {% csrf_token %}
@@ -27,4 +27,32 @@
         {% endbuttons %}
     </form>
 {% endif %}
+{% if object.comments %}
+    <h2>Comments:</h2>
+    <hr>
+    {% for comment in object.comments %}
+    <blockquote id="comment-{{ comment.id }}">
+        <p>Comment by {{ comment.user }} at {{ comment.created|date:'d/m/y H:i' }}</p>
+        {{ comment.content|linebreaks }}
+    </blockquote>
+    <hr>
+    {% endfor %}
+{% else %}
+    <h2>No comments yet!</h2>
+    <p>Be the first!</p>
+    <hr>
+{% endif %}
+{% if user.is_authenticated %}
+    <h3>Commenting as {{ user.username }}</h3>
+    <form action="{% url 'add-comment' issue_pk=object.id %}" method="post">
+        {% csrf_token %}
+        {% bootstrap_form comment_form %}
+        {% buttons %}
+        <button type="submit" class="btn btn-primary">Add Comment</button>
+        {% endbuttons %}
+    </form>
+{% else %}
+    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Log in to comment</a>
+{% endif %}
+    
 {% endblock %}

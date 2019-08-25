@@ -1,11 +1,12 @@
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import DetailView, ListView, CreateView
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
 import datetime
-from issues.models import Issue
+from issues.models import Issue, Comment
+from issues.forms import CommentForm
 
 # Create your views here.
 
@@ -30,7 +31,13 @@ class IssueView(DetailView):
         issue = super(IssueView, self).get_object(queryset)
         issue.views += 1
         issue.save()
+        issue.comments = issue.comment_set.all()
         return issue
+
+    def get_context_data(self, **kwargs):
+        context = super(IssueView, self).get_context_data(**kwargs)
+        context['comment_form'] = CommentForm()
+        return context
 
 
 class AddIssueView(LoginRequiredMixin, CreateView):
@@ -68,3 +75,22 @@ class SetIssueStatusView(SingleObjectMixin, PermissionRequiredMixin, View):
             setattr(issue, self.status_field, datetime.datetime.now())
             issue.save()
         return redirect(issue.get_absolute_url())
+
+
+class AddCommentView(LoginRequiredMixin, CreateView):
+    '''
+    View to add a new comment to an issue.
+    Sets the comment's user to the user making the request.
+    Sets the comments issue to the referenced issue.
+    Sets the comment's reply_to to the referenced comment.
+    '''
+    model = Comment
+    fields = ['content']
+    template_name = 'add_comment.html'
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        form.instance.issue = get_object_or_404(Issue, pk=int(self.kwargs['issue_pk']))
+        if self.kwargs.get('comment_pk'):
+            form.instance.reply_to = get_object_or_404(Comment, pk=int(self.kwargs['comment_pk']))
+        return super(AddCommentView, self).form_valid(form)
