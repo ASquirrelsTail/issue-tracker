@@ -1,6 +1,6 @@
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import DetailView, ListView, CreateView
+from django.views.generic import DetailView, ListView, CreateView, UpdateView
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -9,6 +9,17 @@ from issues.models import Issue, Comment
 from issues.forms import CommentForm
 
 # Create your views here.
+
+
+class AuthorOrAdminMixin(PermissionRequiredMixin, SingleObjectMixin):
+    '''
+    Mixin for checking whether a user is the author of an object, or they have
+    permission to access it. Otherwise returns 403 Forbidden.
+    '''
+    raise_exception = True
+
+    def has_permission(self):
+        return self.get_object().user == self.request.user or super(AuthorOrAdminMixin, self).has_permission()
 
 
 class IssuesListView(ListView):
@@ -85,7 +96,7 @@ class AddCommentView(LoginRequiredMixin, CreateView):
     Sets the comment's reply_to to the referenced comment.
     '''
     model = Comment
-    fields = ['content']
+    form_class = CommentForm
     template_name = 'add_comment.html'
 
     def form_valid(self, form):
@@ -94,3 +105,18 @@ class AddCommentView(LoginRequiredMixin, CreateView):
         if self.kwargs.get('comment_pk'):
             form.instance.reply_to = get_object_or_404(Comment, pk=int(self.kwargs['comment_pk']))
         return super(AddCommentView, self).form_valid(form)
+
+
+class EditCommentView(AuthorOrAdminMixin, UpdateView):
+    '''
+    View to edit a comment.
+    Sets the edited date to now on save.
+    '''
+    permission_required = 'issues.can_edit_all_comments'
+    model = Comment
+    form_class = CommentForm
+    template_name = 'edit_comment.html'
+
+    def form_valid(self, form):
+        form.instance.edited = datetime.datetime.now()
+        return super(EditCommentView, self).form_valid(form)

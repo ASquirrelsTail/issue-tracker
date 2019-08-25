@@ -40,6 +40,9 @@ class Comment(models.Model):
     edited = models.DateTimeField(null=True, default=None)
     content = models.TextField()
 
+    class Meta:
+        permissions = (('can_edit_all_comments', 'Edit any user\'s comments.'),)
+
     def __str__(self):
         return 'By {0} on issue {1} @ {2}'.format(self.user.username, self.issue.title, self.created)
 

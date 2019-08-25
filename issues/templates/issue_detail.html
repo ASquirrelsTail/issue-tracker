@@ -34,6 +34,9 @@
     <blockquote id="comment-{{ comment.id }}">
         <p>Comment by {{ comment.user }} at {{ comment.created|date:'d/m/y H:i' }}</p>
         {{ comment.content|linebreaks }}
+        {% if comment.user == user or perms.issues.can_edit_all_comments %}
+        <a href="{% url 'edit-comment' issue_pk=object.id pk=comment.id %}" class="btn btn-primary">Edit Comment</a>
+        {% endif %}
     </blockquote>
     <hr>
     {% endfor %}
@@ -43,7 +46,7 @@
     <hr>
 {% endif %}
 {% if user.is_authenticated %}
-    <h3>Commenting as {{ user.username }}</h3>
+    <h3 id='add-comment'>Commenting as {{ user.username }}</h3>
     <form action="{% url 'add-comment' issue_pk=object.id %}" method="post">
         {% csrf_token %}
         {% bootstrap_form comment_form %}
@@ -52,7 +55,7 @@
         {% endbuttons %}
     </form>
 {% else %}
-    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Log in to comment</a>
+    <a href="{% url 'login' %}?next={{ request.path }}%23add-comment" class="btn btn-primary">Log in to comment</a>
 {% endif %}
     
 {% endblock %}

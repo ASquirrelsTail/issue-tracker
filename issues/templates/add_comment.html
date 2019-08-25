@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% load bootstrap4 %}
-{% block title %}Add Issue{% endblock %}
+{% block title %}Add Comment{% endblock %}
 {% block content %}
-<h1>Add Issue</h1>
+<h1>Add Comment</h1>
 <form method="post">
     {% csrf_token %}
     {% bootstrap_form form %}
