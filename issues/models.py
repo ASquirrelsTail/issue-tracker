@@ -123,7 +123,7 @@ class Comment(models.Model):
         permissions = (('can_edit_all_comments', 'Edit any user\'s comments.'),)
 
     def __str__(self):
-        return 'By {0} on issue {1} @ {2}'.format(self.user.username, self.issue.title, self.created)
+        return 'By {0} on issue {1} @ {2}'.format(self.user.username, self.issue.id, self.created.strftime('%d/%m/%y %H:%M'))
 
     def get_absolute_url(self):
         return reverse('issue', kwargs={'pk': self.issue.pk}) + '#comment-{0}'.format(self.pk)
