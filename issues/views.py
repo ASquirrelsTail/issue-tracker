@@ -5,7 +5,7 @@ from django.views import View
 from django.views.generic.detail import SingleObjectMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.utils import timezone
-from issues.models import Issue, Comment, Vote
+from issues.models import Issue, Comment, Vote, Pageview
 from issues.forms import CommentForm, IssueForm
 
 # Create your views here.
@@ -50,8 +50,8 @@ class IssueView(DetailView):
 
     def get_object(self, queryset=None):
         issue = super(IssueView, self).get_object(queryset)
-        issue.views += 1
-        issue.save()
+        view = Pageview(issue=issue)
+        view.save()
         return issue
 
     def get_context_data(self, **kwargs):

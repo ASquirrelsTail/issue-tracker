@@ -16,7 +16,6 @@ class Issue(models.Model):
     approved = models.DateTimeField(null=True, default=None)
     doing = models.DateTimeField(null=True, default=None)
     done = models.DateTimeField(null=True, default=None)
-    views = models.IntegerField(default=0)
 
     class Meta:
         permissions = (('can_update_status', 'Update Issue status.'),
@@ -30,7 +29,7 @@ class Issue(models.Model):
 
     @property
     def no_views(self):
-        return self.views
+        return self.pageview_set.all().count()
 
     @property
     def no_votes(self):
@@ -88,10 +87,22 @@ class Label(models.Model):
         return self.name
 
 
+class Pageview(models.Model):
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return 'View of issue {0} at {1}'.format(self.issue.id, self.created)
+
+    def get_absolute_url(self):
+        return reverse('issue', kwargs={'pk': self.issue.pk})
+
+
 class Vote(models.Model):
     user = models.ForeignKey(User)
     issue = models.ForeignKey(Issue)
     count = models.IntegerField(default=1)
+    created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return 'Vote for issue {0} by {1}'.format(self.issue.id, self.user)
