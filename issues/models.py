@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.db.models import Sum
 
 # Create your models here.
 
@@ -26,12 +27,46 @@ class Issue(models.Model):
     def get_absolute_url(self):
         return reverse('issue', kwargs={'pk': self.pk})
 
+    def get_votes(self):
+        '''
+        Returns the sum of votes on an issue.
+        '''
+        return self.vote_set.all().aggregate(Sum('count'))['count__sum']
+
+    def get_comments(self):
+        '''
+        Returns comments and replies to an issue.
+        '''
+        comments = self.comment_set.filter(reply_to=None)  # Is this the best way to do this?
+        for comment in comments:
+            comment.replies = self.comment_set.filter(reply_to=comment)
+
+        return comments
+
+    def has_voted(self, user):
+        '''
+        Checks if a user has voted for the issue.
+        '''
+        return bool(self.vote_set.filter(user=user))
+
 
 class Label(models.Model):
     name = models.CharField(max_length=30)
 
     def __str__(self):
         return self.name
+
+
+class Vote(models.Model):
+    user = models.ForeignKey(User)
+    issue = models.ForeignKey(Issue)
+    count = models.IntegerField(default=1)
+
+    def __str__(self):
+        return 'Vote for issue {0} by {1}'.format(self.issue.id, self.user)
+
+    def get_absolute_url(self):
+        return reverse('issue', kwargs={'pk': self.issue.pk})
 
 
 class Comment(models.Model):

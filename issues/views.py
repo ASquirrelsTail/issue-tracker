@@ -1,11 +1,11 @@
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import DetailView, ListView, CreateView, UpdateView
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
 import datetime
-from issues.models import Issue, Comment
+from issues.models import Issue, Comment, Vote
 from issues.forms import CommentForm
 
 # Create your views here.
@@ -22,6 +22,14 @@ class AuthorOrAdminMixin(PermissionRequiredMixin, SingleObjectMixin):
         return self.get_object().user == self.request.user or super(AuthorOrAdminMixin, self).has_permission()
 
 
+class NotAuthorOrAdminMixin(AuthorOrAdminMixin):
+    '''
+    Mixin for checking a user ISN'T the author of the object or an admin.
+    '''
+    def has_permission(self):
+        return not super(AuthorOrAdminMixin, self).has_permission()
+
+
 class IssuesListView(ListView):
     '''
     List view for displaying issues.
@@ -33,8 +41,9 @@ class IssuesListView(ListView):
 class IssueView(DetailView):
     '''
     Detail view for displaying individual issues.
-    Increases issue's view count and gets comments on load.
-    Inserts comment form into context.
+    Increases issue's view count and gets comments and votes on load.
+    Inserts comment form and whether a user has voted already into 
+    template context.
     '''
     queryset = Issue.objects.all()
     template_name = 'issue_detail.html'
@@ -43,14 +52,14 @@ class IssueView(DetailView):
         issue = super(IssueView, self).get_object(queryset)
         issue.views += 1
         issue.save()
-        issue.comments = issue.comment_set.filter(reply_to=None)  # Is this the best way to do this?
-        for comment in issue.comments:
-            comment.replies = issue.comment_set.filter(reply_to=comment)
+        issue.votes = issue.get_votes()
+        issue.comments = issue.get_comments()
         return issue
 
     def get_context_data(self, **kwargs):
         context = super(IssueView, self).get_context_data(**kwargs)
         context['comment_form'] = CommentForm()
+        context['has_voted'] = self.object.has_voted(self.request.user)
         return context
 
 
@@ -103,6 +112,22 @@ class SetIssueStatusView(SingleObjectMixin, PermissionRequiredMixin, View):
         if getattr(issue, self.status_field) is None:
             setattr(issue, self.status_field, datetime.datetime.now())
             issue.save()
+        return redirect(issue.get_absolute_url())
+
+
+class VoteForIssueView(SingleObjectMixin, LoginRequiredMixin, View):
+    '''
+    View to add a vote to an issue, if the user has not already voted for it.
+    Redirects to issue page.
+    '''
+    model = Issue
+    http_method_names = ['post']
+
+    def post(self, request, pk):
+        issue = self.get_object()
+        if not issue.has_voted(request.user):
+            vote = Vote(user=request.user, issue=issue)
+            vote.save()
         return redirect(issue.get_absolute_url())
 
 

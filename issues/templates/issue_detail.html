@@ -3,7 +3,17 @@
 {% block title %}{{ object }}{% endblock %}
 {% block content %}
 <h1>{{ object }}</h1>
-<p>Views: {{ object.views }}</p>
+<p>Views: {{ object.views }} Votes: {{ object.votes }}</p>
+{% if not has_voted %}
+    <form action="{% url 'vote-for-issue' pk=object.id %}" method="post">
+        {% csrf_token %}
+        {% buttons %}
+        <button type="submit" class="btn btn-primary">Upvote</button>
+        {% endbuttons %}
+    </form>
+{% else %}
+<p>You have already voted.</p>
+{% endif %}
 {{ object.content|linebreaks }}
 {% if object.edited %}
     <p>Last edit {{ object.edited|date:'d/m/y H:i' }}</p>
