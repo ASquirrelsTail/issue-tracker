@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db.models import Sum
+import datetime
 
 # Create your models here.
 
@@ -27,13 +28,15 @@ class Issue(models.Model):
     def get_absolute_url(self):
         return reverse('issue', kwargs={'pk': self.pk})
 
-    def get_votes(self):
+    @property
+    def votes(self):
         '''
         Returns the sum of votes on an issue.
         '''
         return self.vote_set.all().aggregate(Sum('count'))['count__sum']
 
-    def get_comments(self):
+    @property
+    def comments(self):
         '''
         Returns comments and replies to an issue.
         '''
@@ -43,11 +46,32 @@ class Issue(models.Model):
 
         return comments
 
+    @property
+    def status(self):
+        '''
+        Returns the issue's status.
+        '''
+        return 'Done' if self.done else 'Doing' if self.doing else 'Approved' if self.approved else 'Awaiting Approval'
+
     def has_voted(self, user):
         '''
         Checks if a user has voted for the issue.
         '''
         return bool(self.vote_set.filter(user=user))
+
+    def set_status(self, status):
+        '''
+        Sets the issue's status by setting it's date, and the date of any preceding statuses, if it isn't already set.
+        '''
+        options = ('approved', 'doing', 'done')
+        if status in options and getattr(self, status) is None:
+            for option in options[:options.index(status) + 1]:
+                if getattr(self, option) is None:
+                    setattr(self, option, datetime.datetime.now())
+            self.save()
+            return status
+        else:
+            return False
 
 
 class Label(models.Model):

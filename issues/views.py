@@ -42,7 +42,7 @@ class IssueView(DetailView):
     '''
     Detail view for displaying individual issues.
     Increases issue's view count and gets comments and votes on load.
-    Inserts comment form and whether a user has voted already into 
+    Inserts comment form and whether a user has voted already into
     template context.
     '''
     queryset = Issue.objects.all()
@@ -52,8 +52,6 @@ class IssueView(DetailView):
         issue = super(IssueView, self).get_object(queryset)
         issue.views += 1
         issue.save()
-        issue.votes = issue.get_votes()
-        issue.comments = issue.get_comments()
         return issue
 
     def get_context_data(self, **kwargs):
@@ -94,24 +92,18 @@ class EditIssueView(AuthorOrAdminMixin, UpdateView):
 
 class SetIssueStatusView(SingleObjectMixin, PermissionRequiredMixin, View):
     '''
-    View that sets an Issue's status field to now.
+    View that sets an Issue's status to the given status_field.
     Can only be accessed by users with the can_update_status permission.
     '''
     model = Issue
     permission_required = 'issues.can_update_status'
     raise_exception = True
     http_method_names = ['post']
-    status_field = 'approved'
+    status_field = None
 
     def post(self, request, pk):
-        '''
-        On Post sets the given status field of an issue to the current time, if it is not already set.
-        Redirects to the issue's page.
-        '''
         issue = self.get_object()
-        if getattr(issue, self.status_field) is None:
-            setattr(issue, self.status_field, datetime.datetime.now())
-            issue.save()
+        issue.set_status(self.status_field)
         return redirect(issue.get_absolute_url())
 
 
