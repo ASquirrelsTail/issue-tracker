@@ -4,7 +4,7 @@ from django.views.generic import DetailView, ListView, CreateView, UpdateView
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
-import datetime
+from django.utils import timezone
 from issues.models import Issue, Comment, Vote
 from issues.forms import CommentForm, IssueForm
 
@@ -86,7 +86,7 @@ class EditIssueView(AuthorOrAdminMixin, UpdateView):
     template_name = 'edit_issue.html'
 
     def form_valid(self, form):
-        form.instance.edited = datetime.datetime.now()
+        form.instance.edited = timezone.now()
         return super(EditIssueView, self).form_valid(form)
 
 
@@ -153,5 +153,5 @@ class EditCommentView(AuthorOrAdminMixin, UpdateView):
     template_name = 'edit_comment.html'
 
     def form_valid(self, form):
-        form.instance.edited = datetime.datetime.now()
+        form.instance.edited = timezone.now()
         return super(EditCommentView, self).form_valid(form)
