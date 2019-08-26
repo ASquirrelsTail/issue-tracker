@@ -6,7 +6,7 @@ from django.views.generic.detail import SingleObjectMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
 import datetime
 from issues.models import Issue, Comment, Vote
-from issues.forms import CommentForm
+from issues.forms import CommentForm, IssueForm
 
 # Create your views here.
 
@@ -67,7 +67,7 @@ class AddIssueView(LoginRequiredMixin, CreateView):
     Sets the issue's user to the user making the request.
     '''
     model = Issue
-    fields = ['title', 'content']
+    form_class = IssueForm
     template_name = 'add_issue.html'
 
     def form_valid(self, form):
@@ -82,7 +82,7 @@ class EditIssueView(AuthorOrAdminMixin, UpdateView):
     '''
     permission_required = 'issues.can_edit_all_issues'
     model = Issue
-    fields = ['title', 'content']
+    form_class = IssueForm
     template_name = 'edit_issue.html'
 
     def form_valid(self, form):
