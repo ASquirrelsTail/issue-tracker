@@ -1,14 +1,13 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import DetailView, ListView, CreateView, UpdateView
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
 from issues.models import Issue, Comment, Vote, Pageview
 from issues.forms import CommentForm, IssueForm
-
-# Create your views here.
 
 
 class AuthorOrAdminMixin(PermissionRequiredMixin, SingleObjectMixin):
@@ -114,13 +113,16 @@ class VoteForIssueView(SingleObjectMixin, LoginRequiredMixin, View):
     '''
     model = Issue
     http_method_names = ['post']
+    raise_exception = True
 
     def post(self, request, pk):
         issue = self.get_object()
         if not issue.has_voted(request.user):
             vote = Vote(user=request.user, issue=issue)
             vote.save()
-        return redirect(issue.get_absolute_url())
+            return redirect(issue.get_absolute_url())
+        else:
+            raise PermissionDenied
 
 
 class AddCommentView(LoginRequiredMixin, CreateView):

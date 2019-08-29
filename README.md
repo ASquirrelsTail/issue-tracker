@@ -63,3 +63,5 @@ A full breakdown of the UX process can be found [here](https://github.com/ASquir
 ### Content
 
 ### Acknowledgements
+
+[This answer](https://stackoverflow.com/a/49129560) to why queryset comparison assertions were failing in tests was a lifesaver. 

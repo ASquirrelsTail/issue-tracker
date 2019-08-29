@@ -69,7 +69,7 @@ class IssueModelTestCase(TestCase):
         issue_three_votes = Issue.objects.get(id=test_issue.id)
         self.assertEqual(3, issue_three_votes.no_votes)
 
-    def test_comments_returns_primary_comments(self):  # THIS TEST IS BROKEN AND ALWAYS HAS BEEN...
+    def test_comments_returns_primary_comments(self):
         '''
         Test the comments property returns the Issue's comments, excluding replies
         (which are stored in the comments themselves).
@@ -86,13 +86,12 @@ class IssueModelTestCase(TestCase):
         comment3 = Comment(user=self.test_user, issue=test_issue, content='Test comment 3')
         comment3.save()
 
-        reply1 = Comment(user=self.test_user, issue=test_issue, reply_to=comment2, content='Test comment 3')
+        reply1 = Comment(user=self.test_user, issue=test_issue, reply_to=comment2, content='Test reply 3')
         reply1.save()
 
         test_issue = Issue.objects.get(id=test_issue.id)
-        # self.assertQuerysetEqual(test_issue.comments, Comment.objects.filter(issue=test_issue, reply_to=None), ordered=False)
-        for comment in test_issue.comments:
-            self.assertIn(comment, [comment1, comment2, comment3])
+        self.assertQuerysetEqual(test_issue.comments, Comment.objects.filter(issue=test_issue, reply_to=None),
+                                 transform=lambda x: x, ordered=False)
 
     def test_no_comments_returns_total_comments(self):
         '''
@@ -262,3 +261,5 @@ class CommentModelTestCase(TestCase):
         '''
         comment = Comment.objects.get(id=self.comment2.id)
         self.assertIn(self.reply1, comment.replies)
+        self.assertQuerysetEqual(comment.replies, Comment.objects.filter(reply_to=comment),
+                                 transform=lambda x: x, ordered=False)
