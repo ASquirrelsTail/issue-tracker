@@ -5,6 +5,7 @@ from django.contrib import auth
 from issue_tracker.settings import LOGIN_REDIRECT_URL
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.views import LoginView
+from credits.models import Wallet
 
 # Create your views here.
 
@@ -42,6 +43,9 @@ class SignUp(NotLoggedInMixin, View):
 
             if user:
                 auth.login(user=user, request=request)
+                # Once the user is successfully created assign them a wallet.
+                wallet = Wallet(user=user)
+                wallet.save()
                 return redirect(LOGIN_REDIRECT_URL)
 
         return self.get(request, signup_form)
