@@ -3,7 +3,7 @@
 {% block title %}Edit Comment{% endblock %}
 {% block content %}
 <h1>Edit Comment</h1>
-<p>Comment by {{ object.user }} at {{ object.created|date:'d/m/y H:i' }}</p>
+<p>Comment by {{ object.user }} at {{ object.created|date:'d/m/y H:i' }}{% if object.reply_to %} in reply to {{ object.reply_to.user }}{% endif %}.</p>
 <form method="post">
     {% csrf_token %}
     {% bootstrap_form form %}

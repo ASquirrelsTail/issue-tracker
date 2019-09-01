@@ -255,6 +255,13 @@ class CommentModelTestCase(TestCase):
         comment = Comment.objects.get(id=self.comment1.id)
         self.assertRegex(str(comment), '^By TestUser on issue 1 \@ [0-9]{2}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}$')
 
+    def test_comment_url_returns_issue_and_comment_id(self):
+        '''
+        Test the absolute url points to the issue page, and the comment's element ID on that page.
+        '''
+        comment = Comment.objects.get(id=self.comment1.id)
+        self.assertEqual(comment.get_absolute_url(), comment.issue.get_absolute_url() + '#comment-{}'.format(self.comment1.id))
+
     def test_comment_replies_contains_replies(self):
         '''
         Test replies property returns a comments replies.
@@ -263,3 +270,13 @@ class CommentModelTestCase(TestCase):
         self.assertIn(self.reply1, comment.replies)
         self.assertQuerysetEqual(comment.replies, Comment.objects.filter(reply_to=comment),
                                  transform=lambda x: x, ordered=False)
+
+    def test_comment_no_replies_returns_no_replies(self):
+        '''
+        Test the no_replies property returns the number of replies.
+        '''
+        comment1 = Comment.objects.get(id=self.comment1.id)
+        self.assertEqual(comment1.no_replies, 0)
+
+        comment2 = Comment.objects.get(id=self.comment2.id)
+        self.assertEqual(comment2.no_replies, 1)

@@ -5,12 +5,16 @@
 <h1>{{ object }}</h1>
 <p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
 {% if not has_voted %}
+    {% if user.is_authenticated %}
     <form action="{% url 'vote-for-issue' pk=object.id %}" method="post">
         {% csrf_token %}
         {% buttons %}
         <button type="submit" class="btn btn-primary">Upvote</button>
         {% endbuttons %}
     </form>
+    {% else %}
+    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Log in to vote for this Issue</a>   
+    {% endif %}
 {% else %}
 <p>You have already voted.</p>
 {% endif %}
@@ -60,7 +64,7 @@
         {% endif %}
     </blockquote>
     {% if comment.replies %}
-        <p><b>Replies</b></p>
+        <p><b>{{ comment.no_replies }} Replies</b></p>
         {% for reply in comment.replies %}
             <blockquote id="comment-{{ reply.id }}">
                 <p>Reply by {{ reply.user }} at {{ reply.created|date:'d/m/y H:i' }}</p>
@@ -74,7 +78,7 @@
             </blockquote>
         {% endfor %}
     {% endif %}
-    {% if user.is_authenticated %}
+    {% if comment_form %}
     <a class="btn btn-primary" data-toggle="collapse" href="#add-reply-{{ comment.id }}" role="button" aria-expanded="false" aria-controls="add-reply-{{ comment.id }}">Reply</a>
     <div id="add-reply-{{ comment.id }}" class="collapse">
         <h3>Replying as {{ user.username }}</h3>
@@ -96,7 +100,7 @@
     <p>Be the first!</p>
     <hr>
 {% endif %}
-{% if user.is_authenticated %}
+{% if comment_form %}
     <h3 id="add-comment">Commenting as {{ user.username }}</h3>
     <form action="{% url 'add-comment' issue_pk=object.id %}" method="post">
         {% csrf_token %}

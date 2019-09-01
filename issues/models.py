@@ -131,3 +131,7 @@ class Comment(models.Model):
     @property
     def replies(self):
         return self.reply_to_set.all()
+
+    @property
+    def no_replies(self):
+        return self.reply_to_set.count()

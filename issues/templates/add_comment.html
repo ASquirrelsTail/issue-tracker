@@ -2,7 +2,11 @@
 {% load bootstrap4 %}
 {% block title %}Add Comment{% endblock %}
 {% block content %}
-<h1>Add Comment</h1>
+{% if not reply_to %}
+<h1>Add Comment for {{ issue }}</h1>
+{% else %}
+<h1>Add reply to {{ reply_to.user }} on {{ issue }}</h1>
+{% endif %}
 <form method="post">
     {% csrf_token %}
     {% bootstrap_form form %}

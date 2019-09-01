@@ -1,14 +1,15 @@
 from django.shortcuts import redirect, get_object_or_404
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import DetailView, ListView, CreateView, UpdateView
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
-from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.utils import timezone
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from issues.models import Issue, Comment, Vote, Pageview
 from issues.forms import CommentForm, IssueForm
 
+
+# MIXINS #
 
 class AuthorOrAdminMixin(PermissionRequiredMixin, SingleObjectMixin):
     '''
@@ -28,6 +29,8 @@ class NotAuthorOrAdminMixin(AuthorOrAdminMixin):
     def has_permission(self):
         return not super(AuthorOrAdminMixin, self).has_permission()
 
+
+# ISSUE VIEWS #
 
 class IssuesListView(ListView):
     '''
@@ -55,8 +58,9 @@ class IssueView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(IssueView, self).get_context_data(**kwargs)
-        context['comment_form'] = CommentForm()
-        context['has_voted'] = self.object.has_voted(self.request.user)
+        if self.request.user.is_authenticated:
+            context['comment_form'] = CommentForm()
+            context['has_voted'] = self.object.has_voted(self.request.user)
         return context
 
 
@@ -125,6 +129,8 @@ class VoteForIssueView(SingleObjectMixin, LoginRequiredMixin, View):
             raise PermissionDenied
 
 
+# COMMENT VIEWS #
+
 class AddCommentView(LoginRequiredMixin, CreateView):
     '''
     View to add a new comment to an issue.
@@ -135,12 +141,24 @@ class AddCommentView(LoginRequiredMixin, CreateView):
     model = Comment
     form_class = CommentForm
     template_name = 'add_comment.html'
+    raise_exception = True
+
+    def get_context_data(self, **kwargs):
+        context = super(AddCommentView, self).get_context_data(**kwargs)
+        context['issue'] = get_object_or_404(Issue, pk=int(self.kwargs['issue_pk']))
+        if self.kwargs.get('comment_pk'):
+            context['reply_to'] = get_object_or_404(Comment, pk=int(self.kwargs['comment_pk']))
+            if context['reply_to'].issue.id != context['issue'].id or context['reply_to'].reply_to is not None:
+                raise SuspiciousOperation
+        return context
 
     def form_valid(self, form):
         form.instance.user = self.request.user
         form.instance.issue = get_object_or_404(Issue, pk=int(self.kwargs['issue_pk']))
         if self.kwargs.get('comment_pk'):
             form.instance.reply_to = get_object_or_404(Comment, pk=int(self.kwargs['comment_pk']))
+            if form.instance.reply_to.issue.id != form.instance.issue.id or form.instance.reply_to.reply_to is not None:
+                raise SuspiciousOperation
         return super(AddCommentView, self).form_valid(form)
 
 
@@ -153,6 +171,12 @@ class EditCommentView(AuthorOrAdminMixin, UpdateView):
     model = Comment
     form_class = CommentForm
     template_name = 'edit_comment.html'
+    raise_exception = True
+
+    def get_context_data(self, **kwargs):
+        context = super(EditCommentView, self).get_context_data(**kwargs)
+        context['issue'] = get_object_or_404(Issue, pk=int(self.kwargs['issue_pk']))
+        return context
 
     def form_valid(self, form):
         form.instance.edited = timezone.now()
