@@ -16,16 +16,21 @@ class Wallet(models.Model):
         Credits the user an ammount.
         '''
         self.ammount += value
-        Credit.objects.create(wallet=self, ammount=value)
+        Credit.objects.create(wallet=self, ammount=value, real_value=real_value)
         self.save()
+        return self.ammount
 
     def debit(self, value=0):
         '''
         Debits an ammount from the users wallet.
         '''
-        self.ammount -= value
-        Debit.objects.create(wallet=self, ammount=value)
-        self.save()
+        if self.ammount >= value:
+            self.ammount -= value
+            Debit.objects.create(wallet=self, ammount=value)
+            self.save()
+            return self.ammount
+        else:
+            return False
 
 
 class Transaction(models.Model):

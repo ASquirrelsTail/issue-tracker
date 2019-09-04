@@ -7,6 +7,6 @@ def wallet_contents(request):
     '''
     add_context = {}
     if request.user.is_authenticated:
-        wallet = Wallet.objects.get_or_create(user=request.user)[0]
+        wallet = Wallet.objects.get_or_create(user=request.user)[0]  # Use get or create while some users do not have wallets on the DB.
         add_context['wallet_ammount'] = wallet.ammount
     return add_context
