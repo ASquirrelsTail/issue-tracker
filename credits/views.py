@@ -3,9 +3,10 @@ from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.shortcuts import render
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+import json
 from credits.forms import GetCreditsForm
 from credits.models import Wallet, PaymentIntent
 import stripe
@@ -58,19 +59,19 @@ class StripeWebhookView(View):
     def dispatch(self, request, *args, **kwargs):
         return super(StripeWebhookView, self).dispatch(request, *args, **kwargs)
 
-    def Post(self, request):
+    def post(self, request):
         endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
         payload = request.body
         sig_header = request.headers.get('STRIPE_SIGNATURE')
 
         try:
-            event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+            event = stripe.Webhook.construct_event(json.loads(payload), sig_header, endpoint_secret)
         except ValueError:
             # invalid payload
-            return HttpResponseBadRequest('Invalid payload')
+            return HttpResponse(status=400)
         except stripe.error.SignatureVerificationError:
             # invalid signature
-            return HttpResponseBadRequest('Invalid signature')
+            return HttpResponse(status=400)
 
         event_dict = event.to_dict()
         if event_dict['type'] == "payment_intent.succeeded":
@@ -85,4 +86,4 @@ class StripeWebhookView(View):
             pass
             # Notify the customer that payment failed
 
-        return HttpResponse('ok')
+        return HttpResponse(status=200)
