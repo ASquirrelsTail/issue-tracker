@@ -60,12 +60,12 @@ class StripeWebhookView(View):
         return super(StripeWebhookView, self).dispatch(request, *args, **kwargs)
 
     def post(self, request):
-        endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+        # endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
         payload = request.body
-        sig_header = request.headers.get('STRIPE_SIGNATURE')
+        # sig_header = request.headers.get('STRIPE_SIGNATURE')
 
         try:
-            event = stripe.Webhook.construct_event(json.loads(payload), sig_header, endpoint_secret)
+            event = stripe.Webhook.construct_event(json.loads(payload), stripe.api_key)
         except ValueError:
             # invalid payload
             return HttpResponse(status=400)
