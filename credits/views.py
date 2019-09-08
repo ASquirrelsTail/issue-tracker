@@ -65,7 +65,7 @@ class StripeWebhookView(View):
         # sig_header = request.headers.get('STRIPE_SIGNATURE')
 
         try:
-            event = stripe.Webhook.construct_event(json.loads(payload), stripe.api_key)
+            event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
         except ValueError:
             # invalid payload
             return HttpResponse(status=400)
