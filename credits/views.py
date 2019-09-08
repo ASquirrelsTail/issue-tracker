@@ -3,10 +3,10 @@ from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.shortcuts import render
 from django.conf import settings
-import stripe
+from django.http import HttpResponse, HttpResponseBadRequest
 from credits.forms import GetCreditsForm
-from credits.models import Wallet
-
+from credits.models import Wallet, PaymentIntent
+import stripe
 
 stripe.api_key = settings.STRIPE_SECRET
 
@@ -42,11 +42,41 @@ class GetCreditsView(HasWalletMixin, FormView):
         # return super(GetCreditsView, self).form_valid(form)
         no_credits = form.cleaned_data['no_credits']
         charge = no_credits * 60
-        intent = stripe.PaymentIntent.create(amount=charge, currency='gbp')
+        intent = PaymentIntent.objects.create_payment_intent(user=self.request.user, credits=no_credits, amount=charge)
+        intent.save()
         return render(self.request, 'get_credits_pay.html',
                       {'client_secret': intent.client_secret, 'stripe_publishable': settings.STRIPE_PUBLISHABLE,
                        'charge': '{:.2f}'.format(charge / 100), 'no_credits': no_credits})
 
 
-class CreatePaymentView(View):
-    pass
+class StripeWebhookView(View):
+    http_method_names = ['post']
+
+    def Post(self, request):
+        endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+        payload = request.body
+        sig_header = request.headers.get('STRIPE_SIGNATURE')
+
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+        except ValueError:
+            # invalid payload
+            return HttpResponseBadRequest('Invalid payload')
+        except stripe.error.SignatureVerificationError:
+            # invalid signature
+            return HttpResponseBadRequest('Invalid signature')
+
+        event_dict = event.to_dict()
+        if event_dict['type'] == "payment_intent.succeeded":
+            intent = event_dict['data']['object']
+            try:
+                payment_intent = PaymentIntent.objects.get(intent_id=intent['id'])
+                payment_intent.Fulfill()
+            except PaymentIntent.DoesNotExist:
+                print('Payment succeded, but failed to find payment intent in tracker DB.')
+            # Fulfill the customer's purchase
+        elif event_dict['type'] == "payment_intent.payment_failed":
+            pass
+            # Notify the customer that payment failed
+
+        return HttpResponse('ok')
