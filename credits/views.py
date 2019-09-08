@@ -4,6 +4,8 @@ from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.shortcuts import render
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseBadRequest
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from credits.forms import GetCreditsForm
 from credits.models import Wallet, PaymentIntent
 import stripe
@@ -51,6 +53,10 @@ class GetCreditsView(HasWalletMixin, FormView):
 
 class StripeWebhookView(View):
     http_method_names = ['post']
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super(StripeWebhookView, self).dispatch(request, *args, **kwargs)
 
     def Post(self, request):
         endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
