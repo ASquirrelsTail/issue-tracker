@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load bootstrap4 %}
+{% block title %}Get Credits - Pay{% endblock %}
+{% block content %}
+<h1>Get Credits - Pay</h1>
+<h2>{{ no_credits }} credits for £{{ charge }}</h2>
+<form id="payment-form" data-secret="{{ client_secret }}">
+    <div id="card-element"></div>
+    {% buttons %}
+    <button type="submit" class="btn btn-primary">Pay</button>
+    {% endbuttons %}
+</form>
+{% endblock %}
+{% block javascript %}
+<script>
+    function submitPayment(e) {
+
+    }
+
+    $(function() {
+        var stripe = Stripe('{{ stripe_publishable }}');
+
+        var elements = stripe.elements();
+        var cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+        $('#payment-form').on('submit', function(e) {
+            e.preventDefault()
+            var clientSecret = $('#payment-form').data('secret');
+            console.log(clientSecret);
+            stripe.handleCardPayment(clientSecret, cardElement)
+                  .then(function(result) {
+                        if (result.error) console.log('Something went wrong!')
+                        else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
+                            window.location.replace('{% url "wallet" %}');
+                        }
+            });
+        });
+    });
+    
+</script>
+{% endblock %}

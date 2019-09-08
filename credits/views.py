@@ -1,9 +1,14 @@
 from django.views.generic.base import TemplateView, View
 from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
+from django.shortcuts import render
+from django.conf import settings
+import stripe
 from credits.forms import GetCreditsForm
 from credits.models import Wallet
 
+
+stripe.api_key = settings.STRIPE_SECRET
 
 # Create your views here.
 
@@ -32,10 +37,15 @@ class GetCreditsView(HasWalletMixin, FormView):
     success_url = '/credits/'
 
     def form_valid(self, form):
-        wallet = Wallet.objects.get_or_create(user=self.request.user)[0]
-        print(form)
-        wallet.credit(value=form.cleaned_data['no_credits'])
-        return super(GetCreditsView, self).form_valid(form)
+        # wallet = Wallet.objects.get_or_create(user=self.request.user)[0]
+        # wallet.credit(value=form.cleaned_data['no_credits'])
+        # return super(GetCreditsView, self).form_valid(form)
+        no_credits = form.cleaned_data['no_credits']
+        charge = no_credits * 60
+        intent = stripe.PaymentIntent.create(amount=charge, currency='gbp')
+        return render(self.request, 'get_credits_pay.html',
+                      {'client_secret': intent.client_secret, 'stripe_publishable': settings.STRIPE_PUBLISHABLE,
+                       'charge': '{:.2f}'.format(charge / 100), 'no_credits': no_credits})
 
 
 class CreatePaymentView(View):
