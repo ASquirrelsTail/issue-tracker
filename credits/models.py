@@ -116,7 +116,7 @@ class PaymentIntent(models.Model):
         credits the users wallet the correct number of credits.
         '''
         intent = self.retrieve_intent()
-        if intent.amount_recieved == self.amount:
+        if intent.amount_received == self.amount:
             wallet = Wallet.objects.get_or_create(user=self.user)[0]
             wallet.credit(self.credits, self.amount)
             self.complete = True
