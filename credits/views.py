@@ -78,7 +78,7 @@ class StripeWebhookView(View):
             intent = event_dict['data']['object']
             try:
                 payment_intent = PaymentIntent.objects.get(intent_id=intent['id'])
-                payment_intent.Fulfill()
+                payment_intent.fulfill()
             except PaymentIntent.DoesNotExist:
                 print('Payment succeded, but failed to find payment intent in tracker DB.')
             # Fulfill the customer's purchase
