@@ -6,7 +6,9 @@ def wallet_contents(request):
     Adds the user's wallet value to the context if they're logged in.
     '''
     add_context = {}
-    if request.user.is_authenticated:
-        wallet = Wallet.objects.get_or_create(user=request.user)[0]  # Use get or create while some users do not have wallets on the DB.
-        add_context['wallet_ammount'] = wallet.ammount
+    if request.user.is_authenticated and not request.user.has_perm('credits.cant_have_wallet'):
+        try:
+            add_context['wallet_ammount'] = request.user.wallet.ammount
+        except Wallet.DoesNotExist:
+            add_context['wallet_ammount'] = 0
     return add_context

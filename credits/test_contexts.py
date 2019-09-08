@@ -1,5 +1,5 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from credits.models import Wallet
 
 
@@ -38,3 +38,31 @@ class WalletContextTestCase(TestCase):
         self.test_user.wallet.credit(10)
         response = self.client.get('/')
         self.assertEqual(response.context.get('wallet_ammount'), 10)
+
+    def test_admin_user_returns_wallet_ammount_none(self):
+        '''
+        An admin user with can't have wallet permission returns a wallet ammount of None.
+        '''
+        admin_user = User.objects.create_user(username='AdminUser', email='admin@test.com',
+                                              password='tH1$isA7357')
+        admin_user.save()
+
+        admin_user.user_permissions.set(Permission.objects.all())
+
+        self.client.login(username='admin_user', password='tH1$isA7357')
+
+        response = self.client.get('/')
+        self.assertIsNone(response.context.get('wallet_ammount'))
+
+    def test_user_has_no_wallet_wallet_ammount_is_zero(self):
+        '''
+        A user without a wallet returns a wallet ammount of zero.
+        '''
+        no_wallet_user = User.objects.create_user(username='NoWalletUser', email='nowallet@test.com',
+                                                  password='tH1$isA7357')
+        no_wallet_user.save()
+
+        self.client.login(username='NoWalletUser', password='tH1$isA7357')
+
+        response = self.client.get('/')
+        self.assertEqual(response.context.get('wallet_ammount'), 0)

@@ -17,11 +17,13 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from account import urls as account_urls
 from issues import urls as issues_urls
+from credits import urls as credits_urls
 from django.views.generic import TemplateView
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^account/', include(account_urls)),
     url(r'^issues/', include(issues_urls)),
+    url(r'^credits/', include(credits_urls)),
     url(r'^$', TemplateView.as_view(template_name="index.html"), name='index'),
 ]

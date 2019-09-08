@@ -8,6 +8,9 @@ class Wallet(models.Model):
     user = models.OneToOneField(User)
     ammount = models.IntegerField(default=0)
 
+    class Meta:
+        permissions = (('cant_have_wallet', 'User can\'t have a wallet.'),)
+
     def __str__(self):
         return '{}\'s wallet'.format(self.user.username)
 
