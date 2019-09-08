@@ -17,7 +17,7 @@ class WalletModelTestCase(TestCase):
 
     def setUp(self):
         wallet = Wallet.objects.get(user=self.test_user)
-        wallet.ammount = 0
+        wallet.amount = 0
         wallet.save()
 
     def test_wallet_str_returns_users_wallet(self):
@@ -28,27 +28,27 @@ class WalletModelTestCase(TestCase):
 
         self.assertEqual(str(wallet), 'TestUser\'s wallet')
 
-    def test_credit_increases_wallet_ammount(self):
+    def test_credit_increases_wallet_amount(self):
         '''
-        Crediting a users wallet increases the ammount in it.
+        Crediting a users wallet increases the amount in it.
         '''
         wallet = Wallet.objects.get(user=self.test_user)
 
         wallet.credit(10)
-        self.assertEqual(wallet.ammount, 10)
+        self.assertEqual(wallet.amount, 10)
 
-    def test_debit_decreases_wallet_ammount(self):
+    def test_debit_decreases_wallet_amount(self):
         '''
-        Debiting a users wallet decreases the ammount in it.
+        Debiting a users wallet decreases the amount in it.
         '''
         wallet = Wallet.objects.get(user=self.test_user)
 
         wallet.credit(10)
         wallet.debit(5)
-        self.assertEqual(wallet.ammount, 5)
+        self.assertEqual(wallet.amount, 5)
 
-    def test_debit_fails_if_wallet_ammount_insufficient(self):
+    def test_debit_fails_if_wallet_amount_insufficient(self):
         wallet = Wallet.objects.get(user=self.test_user)
         self.assertFalse(wallet.debit(5))
         wallet = Wallet.objects.get(user=self.test_user)
-        self.assertEqual(0, wallet.ammount)
+        self.assertEqual(0, wallet.amount)

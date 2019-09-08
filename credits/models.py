@@ -10,7 +10,7 @@ stripe.api_key = settings.STRIPE_SECRET
 
 class Wallet(models.Model):
     user = models.OneToOneField(User)
-    ammount = models.IntegerField(default=0)
+    amount = models.IntegerField(default=0)
 
     class Meta:
         permissions = (('cant_have_wallet', 'User can\'t have a wallet.'),)
@@ -18,24 +18,24 @@ class Wallet(models.Model):
     def __str__(self):
         return '{}\'s wallet'.format(self.user.username)
 
-    def credit(self, value=0, real_value=0):
+    def credit(self, amount=0, real_value=0):
         '''
-        Credits the user an ammount.
+        Credits the user an amount.
         '''
-        self.ammount += value
-        Credit.objects.create(wallet=self, ammount=value, real_value=real_value)
+        self.amount += amount
+        Credit.objects.create(wallet=self, amount=amount, real_value=real_value)
         self.save()
-        return self.ammount
+        return self.amount
 
-    def debit(self, value=0):
+    def debit(self, amount=0):
         '''
-        Debits an ammount from the users wallet.
+        Debits an amount from the users wallet.
         '''
-        if self.ammount >= value:
-            self.ammount -= value
-            Debit.objects.create(wallet=self, ammount=value)
+        if self.amount >= amount:
+            self.amount -= amount
+            Debit.objects.create(wallet=self, amount=amount)
             self.save()
-            return self.ammount
+            return self.amount
         else:
             return False
 
@@ -43,7 +43,7 @@ class Wallet(models.Model):
 class Transaction(models.Model):
     wallet = models.ForeignKey(Wallet)
     created = models.DateTimeField(auto_now_add=True)
-    ammount = models.IntegerField(default=0)
+    amount = models.IntegerField(default=0)
 
     class Meta:
         abstract = True
@@ -112,7 +112,7 @@ class PaymentIntent(models.Model):
 
     def fulfill(self):
         '''
-        Completes the payment, checks the correct ammount has been recieved, and
+        Completes the payment, checks the correct amount has been recieved, and
         credits the users wallet the correct number of credits.
         '''
         intent = self.retrieve_intent()
