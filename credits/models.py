@@ -18,12 +18,13 @@ class Wallet(models.Model):
     def __str__(self):
         return '{}\'s wallet'.format(self.user.username)
 
-    def credit(self, amount=0, real_value=0):
+    def credit(self, amount=0, real_value=0, transaction_id=None):
         '''
         Credits the user an amount.
         '''
         self.amount += amount
-        Credit.objects.create(wallet=self, amount=amount, real_value=real_value)
+        transaction = Credit.objects.create(wallet=self, amount=amount, real_value=real_value, stripe_transaction_id=transaction_id)
+        transaction.save()
         self.save()
         return self.amount
 
@@ -33,7 +34,8 @@ class Wallet(models.Model):
         '''
         if self.amount >= amount:
             self.amount -= amount
-            Debit.objects.create(wallet=self, amount=amount)
+            transaction = Debit.objects.create(wallet=self, amount=amount)
+            transaction.save()
             self.save()
             return self.amount
         else:
@@ -116,9 +118,9 @@ class PaymentIntent(models.Model):
         credits the users wallet the correct number of credits.
         '''
         intent = self.retrieve_intent()
-        if intent.amount_received == self.amount:
+        if intent.amount_received == self.amount == intent.charges.data[0].amount:
             wallet = Wallet.objects.get_or_create(user=self.user)[0]
-            wallet.credit(self.credits, self.amount)
+            wallet.credit(self.credits, self.amount, intent.charges.data[0].id)
             self.complete = True
             self.save()
         return self.complete
