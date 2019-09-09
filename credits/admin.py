@@ -16,7 +16,7 @@ class CreditAdmin(admin.TabularInline):
 
 class WalletAdmin(admin.ModelAdmin):
     model = Wallet
-    readonly_fields = ('user', 'amount',)
+    readonly_fields = ('user', 'balance',)
     inlines = (DebitAdmin, CreditAdmin)
 
 

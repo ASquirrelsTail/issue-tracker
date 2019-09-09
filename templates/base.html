@@ -29,9 +29,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
                 </li>
-                {% if wallet_amount is not None %}
+                {% if wallet_balance is not None %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'wallet' %}">Credits: {{ wallet_amount }}</a>
+                    <a class="nav-link" href="{% url 'wallet' %}">Credits: {{ wallet_balance }}</a>
                 </li>
                 {% endif %}
                 {% else %}

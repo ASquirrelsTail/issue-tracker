@@ -10,7 +10,7 @@ stripe.api_key = settings.STRIPE_SECRET
 
 class Wallet(models.Model):
     user = models.OneToOneField(User)
-    amount = models.IntegerField(default=0)
+    balance = models.IntegerField(default=0)
 
     class Meta:
         permissions = (('cant_have_wallet', 'User can\'t have a wallet.'),)
@@ -22,22 +22,22 @@ class Wallet(models.Model):
         '''
         Credits the user an amount.
         '''
-        self.amount += amount
+        self.balance += amount
         transaction = Credit.objects.create(wallet=self, amount=amount, real_value=real_value, stripe_transaction_id=transaction_id)
         transaction.save()
         self.save()
-        return self.amount
+        return self.balance
 
     def debit(self, amount=0):
         '''
         Debits an amount from the users wallet.
         '''
-        if self.amount >= amount:
-            self.amount -= amount
+        if self.balance >= amount:
+            self.balance -= amount
             transaction = Debit.objects.create(wallet=self, amount=amount)
             transaction.save()
             self.save()
-            return self.amount
+            return self.balance
         else:
             return False
 

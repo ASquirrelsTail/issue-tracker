@@ -21,27 +21,27 @@ class WalletContextTestCase(TestCase):
 
     def test_anonymous_user_no_wallet(self):
         '''
-        Anonymous users have no wallet amount.
+        Anonymous users have no wallet balance.
         '''
         response = self.client.get('/')
-        self.assertIsNone(response.context.get('wallet_amount'))
+        self.assertIsNone(response.context.get('wallet_balance'))
 
-    def test_authenticated_user_returns_wallet_amount(self):
+    def test_authenticated_user_returns_wallet_balance(self):
         '''
-        A users wallet amount is added to the context when they are authenticated.
+        A users wallet balance is added to the context when they are authenticated.
         '''
         self.client.login(username='TestContextUser', password='tH1$isA7357')
 
         response = self.client.get('/')
-        self.assertEqual(response.context.get('wallet_amount'), 0)
+        self.assertEqual(response.context.get('wallet_balance'), 0)
 
         self.test_user.wallet.credit(10)
         response = self.client.get('/')
-        self.assertEqual(response.context.get('wallet_amount'), 10)
+        self.assertEqual(response.context.get('wallet_balance'), 10)
 
-    def test_admin_user_returns_wallet_amount_none(self):
+    def test_admin_user_returns_wallet_balance_none(self):
         '''
-        An admin user with can't have wallet permission returns a wallet amount of None.
+        An admin user with can't have wallet permission returns a wallet balance of None.
         '''
         admin_user = User.objects.create_user(username='AdminUser', email='admin@test.com',
                                               password='tH1$isA7357')
@@ -52,11 +52,11 @@ class WalletContextTestCase(TestCase):
         self.client.login(username='admin_user', password='tH1$isA7357')
 
         response = self.client.get('/')
-        self.assertIsNone(response.context.get('wallet_amount'))
+        self.assertIsNone(response.context.get('wallet_balance'))
 
-    def test_user_has_no_wallet_wallet_amount_is_zero(self):
+    def test_user_has_no_wallet_wallet_balance_is_zero(self):
         '''
-        A user without a wallet returns a wallet amount of zero.
+        A user without a wallet returns a wallet balance of zero.
         '''
         no_wallet_user = User.objects.create_user(username='NoWalletUser', email='nowallet@test.com',
                                                   password='tH1$isA7357')
@@ -65,4 +65,4 @@ class WalletContextTestCase(TestCase):
         self.client.login(username='NoWalletUser', password='tH1$isA7357')
 
         response = self.client.get('/')
-        self.assertEqual(response.context.get('wallet_amount'), 0)
+        self.assertEqual(response.context.get('wallet_balance'), 0)
