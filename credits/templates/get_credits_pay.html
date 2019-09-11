@@ -10,33 +10,56 @@
     <button type="submit" class="btn btn-primary">Pay</button>
     {% endbuttons %}
     <p>Use: 4000002500003155</p>
+    <p>Use: 4000008260003178 to fail with insufficient funds</p>
 </form>
+<!-- Modal to display payment error messages -->
+<div class="modal" id="payment-error-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Payment failed</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="payment-error-message">Something went wrong with the payment.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 {% block javascript %}
 <script>
-    function submitPayment(e) {
-
-    }
-
     $(function() {
         var stripe = Stripe('{{ stripe_publishable }}');
 
         var elements = stripe.elements();
         var cardElement = elements.create('card');
         cardElement.mount('#card-element');
+
         $('#payment-form').on('submit', function(e) {
+            // On payment submission prevent the form being submitted, 
+            // retrieve the payment intent client secret key and pass to Stripe with the card details.
             e.preventDefault()
             var clientSecret = $('#payment-form').data('secret');
             console.log(clientSecret);
             stripe.handleCardPayment(clientSecret, cardElement)
                   .then(function(result) {
-                        if (result.error) console.log('Something went wrong!')
-                        else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
+                        if (result.error) {
+                            // If stripe returns a failure, show the user the message from stripe in a modal and allow them to retry.
+                            $('#payment-error-message').text(result.error.message);
+                            $('#payment-error-modal').modal('show');
+                            console.log(result.error)
+                        }else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
+                            // If stripe returns success return them to their wallet. The stripe webhook will update their wallet.
                             window.location.replace('{% url "wallet" %}');
                         }
-            });
+                  });
         });
-    });
-    
+    });   
 </script>
 {% endblock %}

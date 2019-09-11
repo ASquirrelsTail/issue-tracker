@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 import json
 from credits.forms import GetCreditsForm
-from credits.models import Wallet, PaymentIntent
+from credits.models import PaymentIntent
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET
@@ -29,20 +29,23 @@ class HasWalletMixin(LoginRequiredMixin, UserPassesTestMixin):
 
 class WalletView(HasWalletMixin, TemplateView):
     '''
-    Wallet view.
+    Wallet view. Uses the existing wallet_amount context variable.
     '''
     template_name = 'wallet.html'
 
 
 class GetCreditsView(HasWalletMixin, FormView):
+    '''
+    View for users to buy credits.
+    '''
     template_name = 'get_credits.html'
     form_class = GetCreditsForm
-    success_url = '/credits/'
 
     def form_valid(self, form):
-        # wallet = Wallet.objects.get_or_create(user=self.request.user)[0]
-        # wallet.credit(value=form.cleaned_data['no_credits'])
-        # return super(GetCreditsView, self).form_valid(form)
+        '''
+        Once the user chooses an ammount, a payment intent is created, and the payment page with the Stripe.js API is returned.
+        Overrides success url redirect.
+        '''
         no_credits = form.cleaned_data['no_credits']
         charge = no_credits * 60
         intent = PaymentIntent.objects.create_payment_intent(user=self.request.user, credits=no_credits, amount=charge)
@@ -53,37 +56,38 @@ class GetCreditsView(HasWalletMixin, FormView):
 
 
 class StripeWebhookView(View):
+    '''
+    View to provide webhook for Stripe payment events.
+    '''
     http_method_names = ['post']
 
-    @method_decorator(csrf_exempt)
+    @method_decorator(csrf_exempt)  # View needs to be CSRF exmpt to allow Stripe to send POST requests.
     def dispatch(self, request, *args, **kwargs):
         return super(StripeWebhookView, self).dispatch(request, *args, **kwargs)
 
     def post(self, request):
-        # endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+        '''
+        Checks validity of posted payment event json and deals with it as apropriate.
+        '''
         payload = request.body
-        # sig_header = request.headers.get('STRIPE_SIGNATURE')
 
         try:
             event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
-        except ValueError:
-            # invalid payload
-            return HttpResponse(status=400)
-        except stripe.error.SignatureVerificationError:
-            # invalid signature
+        except (ValueError, stripe.error.SignatureVerificationError):
+            # Invalid payload or invalid signature
             return HttpResponse(status=400)
 
         event_dict = event.to_dict()
+
         if event_dict['type'] == "payment_intent.succeeded":
+            # If the event is a successful payment, match it to a stored intent object, and fulfill the payment.
             intent = event_dict['data']['object']
             try:
                 payment_intent = PaymentIntent.objects.get(intent_id=intent['id'])
                 payment_intent.fulfill()
             except PaymentIntent.DoesNotExist:
+                # If the payment intent doesn't exist in the system, something needs to be done by a human being...
+                # Payment has been made, but the order cannot be fulfilled. Payment probably needs refunding.
                 print('Payment succeded, but failed to find payment intent in tracker DB.')
-            # Fulfill the customer's purchase
-        elif event_dict['type'] == "payment_intent.payment_failed":
-            pass
-            # Notify the customer that payment failed
 
         return HttpResponse(status=200)
