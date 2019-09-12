@@ -22,14 +22,6 @@ class AuthorOrAdminMixin(PermissionRequiredMixin, SingleObjectMixin):
         return self.get_object().user == self.request.user or super(AuthorOrAdminMixin, self).has_permission()
 
 
-class NotAuthorOrAdminMixin(AuthorOrAdminMixin):
-    '''
-    Mixin for checking a user ISN'T the author of the object or an admin.
-    '''
-    def has_permission(self):
-        return not super(AuthorOrAdminMixin, self).has_permission()
-
-
 # ISSUE VIEWS #
 
 class IssuesListView(ListView):
@@ -38,6 +30,13 @@ class IssuesListView(ListView):
     '''
     model = Issue
     template_name = 'issue_list.html'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super(IssuesListView, self).get_context_data(**kwargs)
+        context['page_range'] = range(max(min(context['page_obj'].number - 2, context['paginator'].num_pages - 4), 1),
+                                      min(max(context['page_obj'].number + 2, 5), context['paginator'].num_pages) + 1)
+        return context
 
 
 class IssueView(DetailView):

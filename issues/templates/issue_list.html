@@ -9,4 +9,54 @@
 <p>No issues yet!</p>
 {% endfor %}
 </ul>
+
+<nav aria-label="Pagination">
+    <ul class="pagination">
+    {% if is_paginated %}
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="{% url 'issues-list' %}?page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Previous</span>
+        </li>
+        {% endif %}
+        {% for page_number in page_range %}
+        {% if page_number == page_obj.number %}
+        <li class="page-item active">
+            <span class="page-link">
+                {{ page_number }}
+                <span class="sr-only">(current)</span>
+            </span>
+        </li>
+        {% else %}
+        <li class="page-item"><a class="page-link" href="{% url 'issues-list' %}?page={{ page_number }}">{{ page_number }}</a></li>
+        {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{% url 'issues-list' %}?page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Next</span>
+        </li>
+        {% endif %}
+    {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Previous</span>
+        </li>
+        <li class="page-item active">
+            <span class="page-link">
+                1
+                <span class="sr-only">(current)</span>
+            </span>
+        </li>
+        <li class="page-item  disabled">
+            <span class="page-link">Next</span>
+        </li>
+    {% endif %}  
+    </ul>
+</nav>
 {% endblock %}
