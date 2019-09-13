@@ -28,7 +28,7 @@ class IssuesListView(ListView):
     '''
     List view for displaying issues.
     '''
-    model = Issue
+    queryset = Issue.objects.all().order_by('-created')
     template_name = 'issue_list.html'
     paginate_by = 10
 
@@ -51,8 +51,10 @@ class IssueView(DetailView):
 
     def get_object(self, queryset=None):
         issue = super(IssueView, self).get_object(queryset)
-        view = Pageview(issue=issue)
-        view.save()
+        if not self.request.session.get('i{}'.format(issue.id), False):
+            view = Pageview(issue=issue)
+            view.save()
+            self.request.session['i{}'.format(issue.id)] = True
         return issue
 
     def get_context_data(self, **kwargs):
