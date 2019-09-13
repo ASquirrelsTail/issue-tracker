@@ -24,6 +24,7 @@
 {% endif %}
 {% if object.user == user or perms.issues.can_edit_all_issues %}
     <a href="{% url 'edit-issue' pk=object.id %}" class="btn btn-primary">Edit Issue</a>
+    <a href="{% url 'delete-issue' pk=object.id %}" class="btn btn-danger">Delete Issue</a>
 {% endif %}
 {% if perms.issues.can_update_issue_status %}
     {% if object.approved is None %}

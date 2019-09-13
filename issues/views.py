@@ -1,10 +1,11 @@
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.views.generic import DetailView, ListView, CreateView, UpdateView
+from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
+from django.urls import reverse_lazy
 from issues.models import Issue, Comment, Vote, Pageview
 from issues.forms import CommentForm, IssueForm
 
@@ -51,7 +52,8 @@ class IssueView(DetailView):
 
     def get_object(self, queryset=None):
         issue = super(IssueView, self).get_object(queryset)
-        if not self.request.session.get('i{}'.format(issue.id), False):
+        # If issue hasn't already been viewed this session, create a new pageview for it.
+        if not self.request.session.get('issue-{}-viewed'.format(issue.id), False):
             view = Pageview(issue=issue)
             view.save()
             self.request.session['i{}'.format(issue.id)] = True
@@ -92,6 +94,13 @@ class EditIssueView(AuthorOrAdminMixin, UpdateView):
     def form_valid(self, form):
         form.instance.edited = timezone.now()
         return super(EditIssueView, self).form_valid(form)
+
+
+class DeleteIssueView(AuthorOrAdminMixin, DeleteView):
+    permission_required = 'issues.can_edit_all_issues'
+    model = Issue
+    success_url = reverse_lazy('issues-list')
+    template_name = 'delete_issue.html'
 
 
 class SetIssueStatusView(SingleObjectMixin, PermissionRequiredMixin, View):
