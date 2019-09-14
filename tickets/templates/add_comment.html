@@ -3,9 +3,9 @@
 {% block title %}Add Comment{% endblock %}
 {% block content %}
 {% if not reply_to %}
-<h1>Add Comment for {{ issue }}</h1>
+<h1>Add Comment for {{ ticket }}</h1>
 {% else %}
-<h1>Add reply to {{ reply_to.user }} on {{ issue }}</h1>
+<h1>Add reply to {{ reply_to.user }} on {{ ticket }}</h1>
 {% endif %}
 <form method="post">
     {% csrf_token %}

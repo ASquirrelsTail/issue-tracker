@@ -20,11 +20,11 @@
                     <a class="nav-link" href="{% url 'index' %}">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'issues-list' %}">Issues</a>
+                    <a class="nav-link" href="{% url 'tickets-list' %}">Tickets</a>
                 </li>
                 {% if user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'add-issue' %}">New Issue</a>
+                    <a class="nav-link" href="{% url 'add-ticket' %}">New Ticket</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'logout' %}">Log Out</a>

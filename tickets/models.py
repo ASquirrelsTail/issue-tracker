@@ -7,14 +7,14 @@ from django.utils import timezone
 # Create your models here.
 
 
-class Issue(models.Model):
-    ISSUE_TYPE_CHOICES = (
+class Ticket(models.Model):
+    TICKET_TYPE_CHOICES = (
         ('Bug', 'Bug Report'),
         ('Feature', 'Feature Request'),
     )
 
     user = models.ForeignKey(User)
-    issue_type = models.CharField(max_length=7, choices=ISSUE_TYPE_CHOICES, default='Bug')
+    ticket_type = models.CharField(max_length=7, choices=TICKET_TYPE_CHOICES, default='Bug')
     title = models.CharField(max_length=100)
     content = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
@@ -24,14 +24,14 @@ class Issue(models.Model):
     done = models.DateTimeField(null=True, default=None)
 
     class Meta:
-        permissions = (('can_update_status', 'Update Issue status.'),
-                       ('can_edit_all_issues', 'Edit any user\'s issue'),)
+        permissions = (('can_update_status', 'Update Ticket status.'),
+                       ('can_edit_all_tickets', 'Edit any user\'s ticket'),)
 
     def __str__(self):
         return '{0} - {1}'.format(self.id, self.title)
 
     def get_absolute_url(self):
-        return reverse('issue', kwargs={'pk': self.pk})
+        return reverse('ticket', kwargs={'pk': self.pk})
 
     @property
     def no_views(self):
@@ -40,14 +40,14 @@ class Issue(models.Model):
     @property
     def no_votes(self):
         '''
-        Returns the sum of votes on an issue.
+        Returns the sum of votes on an ticket.
         '''
         return self.vote_set.all().aggregate(Sum('count'))['count__sum'] or 0
 
     @property
     def comments(self):
         '''
-        Returns comments and replies to an issue.
+        Returns comments and replies to an ticket.
         '''
         return self.comment_set.filter(reply_to=None)
 
@@ -61,13 +61,13 @@ class Issue(models.Model):
     @property
     def status(self):
         '''
-        Returns the issue's status.
+        Returns the ticket's status.
         '''
         return 'done' if self.done else 'doing' if self.doing else 'approved' if self.approved else 'awaiting approval'
 
     def has_voted(self, user):
         '''
-        Checks if a user has voted for the issue.
+        Checks if a user has voted for the ticket.
         '''
         return user.is_authenticated and bool(self.vote_set.filter(user=user))
 
@@ -76,7 +76,7 @@ class Issue(models.Model):
         Adds a vote if the user is eligible to do so.
         '''
         if not self.has_voted(user):
-            vote = Vote(user=user, issue=self)
+            vote = Vote(user=user, ticket=self)
             vote.save()
             return True
         else:
@@ -84,7 +84,7 @@ class Issue(models.Model):
 
     def set_status(self, status):
         '''
-        Sets the issue's status by setting it's date, and the date of any preceding statuses, if it isn't already set.
+        Sets the ticket's status by setting it's date, and the date of any preceding statuses, if it isn't already set.
         '''
         options = ('approved', 'doing', 'done')
         if status in options and getattr(self, status) is None:
@@ -105,31 +105,31 @@ class Label(models.Model):
 
 
 class Pageview(models.Model):
-    issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return 'View of issue {0} at {1}'.format(self.issue.id, self.created)
+        return 'View of ticket {0} at {1}'.format(self.ticket.id, self.created)
 
     def get_absolute_url(self):
-        return reverse('issue', kwargs={'pk': self.issue.pk})
+        return reverse('ticket', kwargs={'pk': self.ticket.pk})
 
 
 class Vote(models.Model):
     user = models.ForeignKey(User)
-    issue = models.ForeignKey(Issue)
+    ticket = models.ForeignKey(Ticket)
     count = models.IntegerField(default=1)
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return 'Vote for issue {0} by {1}'.format(self.issue.id, self.user)
+        return 'Vote for ticket {0} by {1}'.format(self.ticket.id, self.user)
 
     def get_absolute_url(self):
-        return reverse('issue', kwargs={'pk': self.issue.pk})
+        return reverse('ticket', kwargs={'pk': self.ticket.pk})
 
 
 class Comment(models.Model):
-    issue = models.ForeignKey(Issue)
+    ticket = models.ForeignKey(Ticket)
     user = models.ForeignKey(User)
     reply_to = models.ForeignKey('self', on_delete=models.CASCADE, null=True, default=None, related_name='reply_to_set')
     created = models.DateTimeField(auto_now_add=True)
@@ -140,10 +140,10 @@ class Comment(models.Model):
         permissions = (('can_edit_all_comments', 'Edit any user\'s comments.'),)
 
     def __str__(self):
-        return 'By {0} on issue {1} @ {2}'.format(self.user.username, self.issue.id, self.created.strftime('%d/%m/%y %H:%M'))
+        return 'By {0} on ticket {1} @ {2}'.format(self.user.username, self.ticket.id, self.created.strftime('%d/%m/%y %H:%M'))
 
     def get_absolute_url(self):
-        return reverse('issue', kwargs={'pk': self.issue.pk}) + '#comment-{0}'.format(self.pk)
+        return reverse('ticket', kwargs={'pk': self.ticket.pk}) + '#comment-{0}'.format(self.pk)
 
     @property
     def replies(self):

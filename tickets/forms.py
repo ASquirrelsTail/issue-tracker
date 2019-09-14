@@ -1,5 +1,5 @@
 from django import forms
-from issues.models import Issue, Comment
+from tickets.models import Ticket, Comment
 
 
 # class LabelForm(forms.ModelForm):
@@ -7,13 +7,13 @@ from issues.models import Issue, Comment
 #         model = Label
 
 
-class IssueForm(forms.ModelForm):
+class TicketForm(forms.ModelForm):
     class Meta:
-        model = Issue
+        model = Ticket
         fields = ['title', 'content']
         labels = {
             'title': ('Title'),
-            'content': ('Issue'),
+            'content': ('Ticket'),
         }
         help_texts = {
             'title': ('The name or a brief description of the issue.'),
