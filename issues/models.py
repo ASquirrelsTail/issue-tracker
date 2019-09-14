@@ -8,7 +8,13 @@ from django.utils import timezone
 
 
 class Issue(models.Model):
+    ISSUE_TYPE_CHOICES = (
+        ('Bug', 'Bug Report'),
+        ('Feature', 'Feature Request'),
+    )
+
     user = models.ForeignKey(User)
+    issue_type = models.CharField(max_length=7, choices=ISSUE_TYPE_CHOICES, default='Bug')
     title = models.CharField(max_length=100)
     content = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
@@ -64,6 +70,17 @@ class Issue(models.Model):
         Checks if a user has voted for the issue.
         '''
         return user.is_authenticated and bool(self.vote_set.filter(user=user))
+
+    def vote(self, user, votes=1):
+        '''
+        Adds a vote if the user is eligible to do so.
+        '''
+        if not self.has_voted(user):
+            vote = Vote(user=user, issue=self)
+            vote.save()
+            return True
+        else:
+            return False
 
     def set_status(self, status):
         '''

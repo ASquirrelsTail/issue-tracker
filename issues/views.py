@@ -131,9 +131,7 @@ class VoteForIssueView(SingleObjectMixin, LoginRequiredMixin, View):
 
     def post(self, request, pk):
         issue = self.get_object()
-        if not issue.has_voted(request.user):
-            vote = Vote(user=request.user, issue=issue)
-            vote.save()
+        if issue.vote(request.user):
             return redirect(issue.get_absolute_url())
         else:
             raise PermissionDenied
