@@ -6,7 +6,8 @@ from django.views.generic.detail import SingleObjectMixin
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.urls import reverse_lazy
-from tickets.models import Ticket, Comment, Vote, Pageview
+from django.contrib import messages
+from tickets.models import Ticket, Comment, Pageview
 from tickets.forms import CommentForm, TicketForm
 
 
@@ -56,7 +57,7 @@ class TicketView(DetailView):
         if not self.request.session.get('ticket-{}-viewed'.format(ticket.id), False):
             view = Pageview(ticket=ticket)
             view.save()
-            self.request.session['i{}'.format(ticket.id)] = True
+            self.request.session['ticket-{}-viewed'.format(ticket.id)] = True
         return ticket
 
     def get_context_data(self, **kwargs):
@@ -78,6 +79,7 @@ class AddTicketView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user
+        messages.success(self.request, 'Successfully created ticket.')
         return super(AddTicketView, self).form_valid(form)
 
 
@@ -93,6 +95,7 @@ class EditTicketView(AuthorOrAdminMixin, UpdateView):
 
     def form_valid(self, form):
         form.instance.edited = timezone.now()
+        messages.success(self.request, 'Successfully edited ticket.')
         return super(EditTicketView, self).form_valid(form)
 
 
@@ -101,6 +104,10 @@ class DeleteTicketView(AuthorOrAdminMixin, DeleteView):
     model = Ticket
     success_url = reverse_lazy('tickets-list')
     template_name = 'delete_ticket.html'
+
+    def get_success_url(self):
+        messages.success(self.request, 'Successfully deleted ticket.')
+        return super(DeleteTicketView, self).get_success_url()
 
 
 class SetTicketStatusView(SingleObjectMixin, PermissionRequiredMixin, View):
@@ -116,7 +123,11 @@ class SetTicketStatusView(SingleObjectMixin, PermissionRequiredMixin, View):
 
     def post(self, request, pk):
         ticket = self.get_object()
-        ticket.set_status(self.status_field)
+        result = ticket.set_status(self.status_field)
+        if result:
+            messages.success(self.request, 'Ticket status set to {}.'.format(result))
+        else:
+            messages.error(self.request, 'Failed to update ticket status.')
         return redirect(ticket.get_absolute_url())
 
 
@@ -132,6 +143,7 @@ class VoteForTicketView(SingleObjectMixin, LoginRequiredMixin, View):
     def post(self, request, pk):
         ticket = self.get_object()
         if ticket.vote(request.user):
+            messages.success(self.request, 'Voted for ticket.')
             return redirect(ticket.get_absolute_url())
         else:
             raise PermissionDenied

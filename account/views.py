@@ -5,6 +5,7 @@ from django.contrib import auth
 from issue_tracker.settings import LOGIN_REDIRECT_URL
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.views import LoginView
+from django.contrib import messages
 
 # Create your views here.
 
@@ -23,7 +24,9 @@ class LogIn(NotLoggedInMixin, LoginView):
     '''
     Log in view requiring the user not to be logged in.
     '''
-    pass
+    def form_valid(self, form):
+        messages.success(self.request, 'Successfully logged in.')
+        return super(LogIn, self).form_valid(form)
 
 
 class SignUp(NotLoggedInMixin, View):
@@ -42,6 +45,7 @@ class SignUp(NotLoggedInMixin, View):
 
             if user:
                 auth.login(user=user, request=request)
+                messages.success(request, 'Successfully created user {}'.format(user.username))
                 return redirect(LOGIN_REDIRECT_URL)
 
         return self.get(request, signup_form)
