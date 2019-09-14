@@ -1,11 +1,14 @@
 from django.views.generic.base import TemplateView, View
+from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.shortcuts import render
 from django.conf import settings
 from django.http import HttpResponse
+from django.core.exceptions import PermissionDenied
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
 import json
 from credits.forms import GetCreditsForm
 from credits.models import PaymentIntent
@@ -52,7 +55,24 @@ class GetCreditsView(HasWalletMixin, FormView):
         intent.save()
         return render(self.request, 'get_credits_pay.html',
                       {'client_secret': intent.client_secret, 'stripe_publishable': settings.STRIPE_PUBLISHABLE,
-                       'charge': '{:.2f}'.format(charge / 100), 'no_credits': no_credits})
+                       'charge': '{:.2f}'.format(charge / 100), 'no_credits': no_credits, 'intent_db_id': intent.id})
+
+
+class CheckIntentView(LoginRequiredMixin, SingleObjectMixin, View):
+    '''
+    View to poll payment intents for completion.
+    '''
+    model = PaymentIntent
+    http_method_names = ['get']
+
+    def get(self, request, pk):
+        intent = self.get_object()
+        if intent.user != request.user:
+            raise PermissionDenied()
+        if intent.complete:
+            messages.success(self.request, 'Payment successful.')
+        response = {'success': intent.complete}
+        return HttpResponse(json.dumps(response), content_type='application/json')
 
 
 class StripeWebhookView(View):
