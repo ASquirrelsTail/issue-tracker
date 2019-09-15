@@ -1,8 +1,11 @@
-from django.test import TestCase
-from django.contrib.auth.models import User, Permission
+from django.test import TestCase, RequestFactory
+from django.contrib.auth.models import User, Permission, AnonymousUser
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.shortcuts import reverse
 from tickets.models import Ticket, Comment
-from tickets.forms import CommentForm, TicketForm
+from tickets.forms import CommentForm, TicketForm, BugForm, FeatureForm
+from tickets.views import AddTicketView
 
 
 class TicketViewsTestCase(TestCase):
@@ -36,6 +39,7 @@ class TicketViewsTestCase(TestCase):
         cls.test_ticket3.save()
 
     def setUp(self):
+        self.factory = RequestFactory()
         self.client.logout()
 
 # TICKET LIST TESTS #
@@ -91,37 +95,66 @@ class TicketViewsTestCase(TestCase):
     def test_get_add_ticket(self):
         '''
         The add ticket view should redirect to the login page for anonymous users, and
-        render the add_ticket.html for logged in users.
+        return 200 for logged in users.
         '''
-        response = self.client.get('/tickets/add/')
-        self.assertRedirects(response, reverse('login') + '?next=/tickets/add/')
+        request = self.factory.get('/tickets/add/')
+        request.user = AnonymousUser()
 
-        self.client.login(username='TestUser', password='tH1$isA7357')
-        response = self.client.get('/tickets/add/')
+        response = AddTicketView.as_view()(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('login') + '?next=/tickets/add/')
+
+        request = self.factory.get('/tickets/add/')
+        request.user = self.test_user
+
+        response = AddTicketView.as_view()(request)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'add_ticket.html')
-
-    def test_get_add_ticket_contains_form(self):
-        '''
-        The add ticket view should contain the TicketForm in the page context for get requests.
-        '''
-        self.client.login(username='TestUser', password='tH1$isA7357')
-        response = self.client.get('/tickets/add/')
-        self.assertIsInstance(response.context['form'], TicketForm)
 
     def test_post_add_ticket_redirects_anonymous(self):
-        response = self.client.post('/tickets/add/', {'title': 'New Ticket', 'content': 'It\'s new!'})
-        self.assertRedirects(response, reverse('login') + '?next=/tickets/add/')
+        request = self.factory.post('/tickets/add/', {'title': 'New Ticket', 'content': 'It\'s new!'})
+        request.user = AnonymousUser()
+
+        response = AddTicketView.as_view()(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('login') + '?next=/tickets/add/')
 
     def test_post_add_ticket_creates_ticket(self):
         '''
         Post requests to add ticket with valid input should create a new ticket, and redirect
         to that ticket's page.
         '''
-        self.client.login(username='TestUser', password='tH1$isA7357')
-        response = self.client.post('/tickets/add/', {'title': 'New Ticket', 'content': 'It\'s new!'})
+        request = self.factory.post('/tickets/add/', {'title': 'New Ticket', 'ticket_type': 'Bug', 'content': 'It\'s new!'})
+        request.user = self.test_user
+        request.session = 'session'
+        request._messages = FallbackStorage(request)
+
+        response = AddTicketView.as_view()(request)
         self.assertTrue(Ticket.objects.get(title='New Ticket'))
-        self.assertRedirects(response, Ticket.objects.get(title='New Ticket').get_absolute_url())
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, Ticket.objects.get(title='New Ticket').get_absolute_url())
+
+
+# TEST ADD BUG #
+
+    def test_get_report_bug_contains_bug_form_uses_template(self):
+        '''
+        The add bug view should contain the BugForm in the page context for get requests.
+        '''
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/report-bug/')
+        self.assertIsInstance(response.context['form'], BugForm)
+        self.assertTemplateUsed(response, 'add_bug.html')
+
+# TEST ADD Feature #
+
+    def test_get_request_feature_contains_feature_form_uses_template(self):
+        '''
+        The add bug view should contain the BugForm in the page context for get requests.
+        '''
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/request-feature/')
+        self.assertIsInstance(response.context['form'], FeatureForm)
+        self.assertTemplateUsed(response, 'add_feature.html')
 
 # EDIT TICKET TESTS #
 
@@ -160,11 +193,11 @@ class TicketViewsTestCase(TestCase):
         '''
         Post requests for unauthorised users should return 403.
         '''
-        response = self.client.post('/tickets/1/edit/', {'title': 'Updated Ticket', 'content': 'It\'s updated!'})
+        response = self.client.post('/tickets/1/edit/', {'title': 'Updated Ticket', 'ticket_type': 'Bug', 'content': 'It\'s updated!'})
         self.assertEqual(response.status_code, 403)
 
         self.client.login(username='OtherUser', password='tH1$isA7357')
-        response = self.client.post('/tickets/1/edit/', {'title': 'Updated Ticket', 'content': 'It\'s updated!'})
+        response = self.client.post('/tickets/1/edit/', {'title': 'Updated Ticket', 'ticket_type': 'Bug', 'content': 'It\'s updated!'})
         self.assertEqual(response.status_code, 403)
 
     def test_post_edit_ticket_updates_ticket(self):
@@ -173,7 +206,7 @@ class TicketViewsTestCase(TestCase):
         and redirect to that ticket's page.
         '''
         self.client.login(username='TestUser', password='tH1$isA7357')
-        response = self.client.post('/tickets/1/edit/', {'title': 'Updated Ticket', 'content': 'It\'s updated!'})
+        response = self.client.post('/tickets/1/edit/', {'title': 'Updated Ticket', 'ticket_type': 'Bug', 'content': 'It\'s updated!'})
         self.assertEqual(Ticket.objects.get(pk=1).title, 'Updated Ticket')
         self.assertEqual(Ticket.objects.get(pk=1).content, 'It\'s updated!')
         self.assertTrue(Ticket.objects.get(pk=1).edited)

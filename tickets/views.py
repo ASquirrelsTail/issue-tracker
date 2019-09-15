@@ -8,7 +8,7 @@ from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.urls import reverse_lazy
 from django.contrib import messages
 from tickets.models import Ticket, Comment, Pageview
-from tickets.forms import CommentForm, TicketForm
+from tickets.forms import CommentForm, TicketForm, FeatureForm, BugForm
 
 
 # MIXINS #
@@ -71,16 +71,34 @@ class TicketView(DetailView):
 class AddTicketView(LoginRequiredMixin, CreateView):
     '''
     View to add a new ticket with title and content.
-    Sets the ticket's user to the user making the request.
+    Sets the ticket's user to the user making the request, and notifies success if valid.
     '''
     model = Ticket
+    success_message = 'Successfully created ticket.'
     form_class = TicketForm
-    template_name = 'add_ticket.html'
 
     def form_valid(self, form):
         form.instance.user = self.request.user
-        messages.success(self.request, 'Successfully created ticket.')
+        messages.success(self.request, self.success_message)
         return super(AddTicketView, self).form_valid(form)
+
+
+class AddBugView(AddTicketView):
+    '''
+    View to submit a bug report.
+    '''
+    success_message = 'Successfully submitted bug report.'
+    form_class = BugForm
+    template_name = 'add_bug.html'
+
+
+class AddFeatureView(AddTicketView):
+    '''
+    View to submit a feature request.
+    '''
+    success_message = 'Successfully submitted feature request.'
+    form_class = FeatureForm
+    template_name = 'add_feature.html'
 
 
 class EditTicketView(AuthorOrAdminMixin, UpdateView):

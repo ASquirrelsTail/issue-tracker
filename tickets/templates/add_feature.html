@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load bootstrap4 %}
+{% block title %}Request Feature{% endblock %}
+{% block content %}
+<h1>Request Feature</h1>
+<form method="post" action="{% url 'add-feature' %}">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    {% buttons %}
+    <button type="submit" class="btn btn-primary">Submit</button>
+    {% endbuttons %}
+</form>
+{% endblock %}

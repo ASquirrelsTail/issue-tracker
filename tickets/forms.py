@@ -8,20 +8,51 @@ from tickets.models import Ticket, Comment
 
 
 class TicketForm(forms.ModelForm):
+    '''
+    Form for editing Tickets.
+    '''
     class Meta:
         model = Ticket
-        fields = ['title', 'content']
+        fields = ['title', 'ticket_type', 'content']
         labels = {
             'title': ('Title'),
-            'content': ('Ticket'),
+            'content': ('Description'),
         }
+        widgets = {
+            'ticket_type': forms.HiddenInput(),
+        }
+
+
+class BugForm(TicketForm):
+    '''
+    Form for submitting Bug Reports.
+    '''
+    ticket_type = forms.CharField(widget=forms.HiddenInput(), initial='Bug')
+
+    class Meta(TicketForm.Meta):
         help_texts = {
-            'title': ('The name or a brief description of the issue.'),
-            'content': ('Explain the issue, include any error codes and hardware details if relevant.'),
+            'title': ('The name or a brief description of the bug.'),
+            'content': ('Explain the bug, include any error codes and hardware details if relevant.'),
+        }
+
+
+class FeatureForm(TicketForm):
+    '''
+    Form for submitting Feature Requests.
+    '''
+    ticket_type = forms.CharField(widget=forms.HiddenInput(), initial='Feature')
+
+    class Meta(TicketForm.Meta):
+        help_texts = {
+            'title': ('The name or a brief description of your suggested feature.'),
+            'content': ('Explain your idea for a new feature.'),
         }
 
 
 class CommentForm(forms.ModelForm):
+    '''
+    Form for submitting comments and replies.
+    '''
     class Meta:
         model = Comment
         fields = ['content']

@@ -1,5 +1,6 @@
 from django.conf.urls import url
-from tickets.views import TicketsListView, TicketView, AddTicketView, SetTicketStatusView, AddCommentView, EditCommentView, EditTicketView, VoteForTicketView, DeleteTicketView
+from tickets.views import (TicketsListView, TicketView, AddBugView, AddFeatureView, SetTicketStatusView, AddCommentView,
+                           EditCommentView, EditTicketView, VoteForTicketView, DeleteTicketView)
 
 urlpatterns = [
     url(r'^$', TicketsListView.as_view(), name='tickets-list'),
@@ -7,7 +8,8 @@ urlpatterns = [
     url(r'^(?P<pk>[0-9]+)/approved/$', SetTicketStatusView.as_view(status_field='approved'), name='approve-ticket'),
     url(r'^(?P<pk>[0-9]+)/doing/$', SetTicketStatusView.as_view(status_field='doing'), name='doing-ticket'),
     url(r'^(?P<pk>[0-9]+)/done/$', SetTicketStatusView.as_view(status_field='done'), name='done-ticket'),
-    url(r'^add/$', AddTicketView.as_view(), name='add-ticket'),
+    url(r'^report-bug/$', AddBugView.as_view(), name='add-bug'),
+    url(r'^request-feature/$', AddFeatureView.as_view(), name='add-feature'),
     url(r'^(?P<pk>[0-9]+)/edit/$', EditTicketView.as_view(), name='edit-ticket'),
     url(r'^(?P<pk>[0-9]+)/delete/$', DeleteTicketView.as_view(), name='delete-ticket'),
     url(r'^(?P<pk>[0-9]+)/vote/$', VoteForTicketView.as_view(), name='vote-for-ticket'),

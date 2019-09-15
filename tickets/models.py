@@ -28,10 +28,18 @@ class Ticket(models.Model):
                        ('can_edit_all_tickets', 'Edit any user\'s ticket'),)
 
     def __str__(self):
-        return '{0} - {1}'.format(self.id, self.title)
+        return '{0} - {1} - {2}'.format(self.id, self.title, self.noun)
 
     def get_absolute_url(self):
         return reverse('ticket', kwargs={'pk': self.pk})
+
+    @property
+    def noun(self):
+        for ticket_type, noun in self.TICKET_TYPE_CHOICES:
+            if ticket_type == self.ticket_type:
+                return noun
+        else:
+            return 'Ticket'
 
     @property
     def no_views(self):

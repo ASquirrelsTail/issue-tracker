@@ -3,6 +3,7 @@
 {% block title %}{{ object }}{% endblock %}
 {% block content %}
 <h1>{{ object }}</h1>
+<h2>{{ object.noun }}</h2>
 <p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
 {% if not has_voted %}
     {% if user.is_authenticated %}
@@ -51,7 +52,7 @@
     {% endif %}
 {% endif %}
 {% if object.comments %}
-    <h2>{{ object.no_comments }} Comments:</h2>
+    <h3>{{ object.no_comments }} Comments:</h3>
     <hr>
     {% for comment in object.comments %}
     <blockquote id="comment-{{ comment.id }}">

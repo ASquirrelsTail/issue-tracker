@@ -14,15 +14,15 @@ class TicketModelTestCase(TestCase):
         cls.test_user = User.objects.create_user(username='TestUser', email='test@test.com',
                                                  password='tH1$isA7357')
 
-        test_ticket = Ticket(user=cls.test_user, title='Test title', content='Test content')
+        test_ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Bug', content='Test content')
         test_ticket.save()
 
-    def test_ticket_str_is_ticket_no_dash_title(self):
+    def test_ticket_str_is_ticket_no_dash_title_dash_type(self):
         '''
-        Test the ticket str name is of the format '{ticket number} - {title}'
+        Test the ticket str name is of the format '{ticket number} - {title} - {ticket type}'
         '''
         ticket = Ticket.objects.get(id=1)
-        self.assertEqual(str(ticket), '1 - Test title')
+        self.assertEqual(str(ticket), '1 - Test title - Bug Report')
 
     def test_absolute_url_returns_ticket_detail(self):
         '''
@@ -35,6 +35,16 @@ class TicketModelTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'ticket_detail.html')
         self.assertEqual(response.context['object'], ticket)
+
+    def test_noun_returns_verbose_ticket_type(self):
+        ticket = Ticket.objects.get(id=1)
+        self.assertEqual(ticket.noun, 'Bug Report')
+
+        feature_ticket = Ticket(user=self.test_user, title='Feature', ticket_type='Feature', content='Test content')
+        feature_ticket.save()
+
+        feature_ticket = Ticket.objects.get(id=feature_ticket.id)
+        self.assertEqual(feature_ticket.noun, 'Feature Request')
 
     def test_no_views_returns_correct_numbers(self):
         '''
