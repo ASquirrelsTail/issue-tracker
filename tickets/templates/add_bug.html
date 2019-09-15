@@ -2,7 +2,7 @@
 {% load bootstrap4 %}
 {% block title %}Report Bug{% endblock %}
 {% block content %}
-<h1>Report Feature</h1>
+<h1>Report Bug</h1>
 <form method="post" action="{% url 'add-bug' %}">
     {% csrf_token %}
     {% bootstrap_form form %}

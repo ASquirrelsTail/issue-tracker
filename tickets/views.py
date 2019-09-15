@@ -34,6 +34,12 @@ class TicketsListView(ListView):
     template_name = 'ticket_list.html'
     paginate_by = 10
 
+    def get_queryset(self):
+        if self.request.user.has_perm('tickets.can_update_status'):
+            return Ticket.objects.all().order_by('-created')
+        else:
+            return Ticket.objects.exclude(approved=None).order_by('-created')
+
     def get_context_data(self, **kwargs):
         context = super(TicketsListView, self).get_context_data(**kwargs)
         context['page_range'] = range(max(min(context['page_obj'].number - 2, context['paginator'].num_pages - 4), 1),
@@ -41,7 +47,7 @@ class TicketsListView(ListView):
         return context
 
 
-class TicketView(DetailView):
+class TicketView(AuthorOrAdminMixin, DetailView):
     '''
     Detail view for displaying individual tickets.
     Increases ticket's view count and gets comments and votes on load.
@@ -50,6 +56,7 @@ class TicketView(DetailView):
     '''
     queryset = Ticket.objects.all()
     template_name = 'ticket_detail.html'
+    permission_required = 'tickets.can_update_status'
 
     def get_object(self, queryset=None):
         ticket = super(TicketView, self).get_object(queryset)
@@ -59,6 +66,16 @@ class TicketView(DetailView):
             view.save()
             self.request.session['ticket-{}-viewed'.format(ticket.id)] = True
         return ticket
+
+    def has_permission(self):
+        '''
+        If a ticket is awaiting approval, it can only be viewed by the user that created it,
+        and admins with permission to update a ticket's status.
+        '''
+        if self.get_object().approved is None:
+            return super(TicketView, self).has_permission()
+        else:
+            return True
 
     def get_context_data(self, **kwargs):
         context = super(TicketView, self).get_context_data(**kwargs)
@@ -118,6 +135,9 @@ class EditTicketView(AuthorOrAdminMixin, UpdateView):
 
 
 class DeleteTicketView(AuthorOrAdminMixin, DeleteView):
+    '''
+    View to delete a ticket.
+    '''
     permission_required = 'tickets.can_edit_all_tickets'
     model = Ticket
     success_url = reverse_lazy('tickets-list')

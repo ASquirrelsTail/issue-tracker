@@ -3,7 +3,7 @@
 {% block title %}{{ object }}{% endblock %}
 {% block content %}
 <h1>{{ object }}</h1>
-<h2>{{ object.noun }}</h2>
+<h2>{{ object.status|capfirst }}</h2>
 <p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
 {% if not has_voted %}
     {% if user.is_authenticated %}
@@ -51,6 +51,7 @@
         </form>
     {% endif %}
 {% endif %}
+{% if object.approved %}
 {% if object.comments %}
     <h3>{{ object.no_comments }} Comments:</h3>
     <hr>
@@ -113,6 +114,7 @@
     </form>
 {% else %}
     <a href="{% url 'login' %}?next={{ request.path }}%23add-comment" class="btn btn-primary">Log in to comment</a>
+{% endif %}
 {% endif %}
     
 {% endblock %}
