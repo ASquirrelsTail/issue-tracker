@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db.models import Sum
 from django.utils import timezone
+from credits.models import Wallet
 
 # Create your models here.
 
@@ -79,16 +80,29 @@ class Ticket(models.Model):
         '''
         return user.is_authenticated and bool(self.vote_set.filter(user=user))
 
-    def vote(self, user, votes=1):
+    def vote(self, user, credits=0):
         '''
         Adds a vote if the user is eligible to do so.
         '''
-        if not self.has_voted(user):
-            vote = Vote(user=user, ticket=self)
-            vote.save()
-            return True
-        else:
-            return False
+        if self.ticket_type == 'Bug':  # Users can vote once for Bugs
+            if not self.has_voted(user):
+                vote = Vote(user=user, ticket=self)
+                vote.save()
+                return {'success': True, 'message': 'Successfully voted for bug fix.'}
+            else:
+                return {'success': False, 'message': 'Already voted for bug fix.'}
+
+        elif self.ticket_type == 'Feature':  # Users require credits to vote for Features
+            try:
+                transaction = user.wallet.debit(credits)
+            except Wallet.DoesNotExist:
+                transaction = False
+            if transaction:
+                vote = Vote(user=user, ticket=self, count=credits, transaction=transaction)
+                vote.save()
+                return {'success': True, 'message': 'Successfully voted for feature.'}
+            else:
+                return {'success': False, 'message': 'Insufficient credits to vote for feature.'}
 
     def set_status(self, status):
         '''
@@ -128,6 +142,7 @@ class Vote(models.Model):
     ticket = models.ForeignKey(Ticket)
     count = models.IntegerField(default=1)
     created = models.DateTimeField(auto_now_add=True)
+    transaction = models.ForeignKey('credits.Debit', null=True, default=None)
 
     def __str__(self):
         return 'Vote for ticket {0} by {1}'.format(self.ticket.id, self.user)

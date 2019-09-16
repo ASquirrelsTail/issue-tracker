@@ -37,7 +37,7 @@ class Wallet(models.Model):
             transaction = Debit.objects.create(wallet=self, amount=amount)
             transaction.save()
             self.save()
-            return self.balance
+            return transaction
         else:
             return False
 

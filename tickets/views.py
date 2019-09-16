@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.db.models import Q
 from tickets.models import Ticket, Comment, Pageview
 from tickets.forms import CommentForm, TicketForm, FeatureForm, BugForm
 
@@ -37,6 +38,8 @@ class TicketsListView(ListView):
     def get_queryset(self):
         if self.request.user.has_perm('tickets.can_update_status'):
             return Ticket.objects.all().order_by('-created')
+        elif self.request.user.is_authenticated:
+            return Ticket.objects.filter(Q(user=self.request.user) | ~Q(approved=None)).order_by('-created')
         else:
             return Ticket.objects.exclude(approved=None).order_by('-created')
 
@@ -179,12 +182,14 @@ class VoteForTicketView(SingleObjectMixin, LoginRequiredMixin, View):
     raise_exception = True
 
     def post(self, request, pk):
+        credits = 1
         ticket = self.get_object()
-        if ticket.vote(request.user):
-            messages.success(self.request, 'Voted for ticket.')
-            return redirect(ticket.get_absolute_url())
+        vote = ticket.vote(request.user, credits)
+        if vote['success']:
+            messages.success(self.request, vote['message'])
         else:
-            raise PermissionDenied
+            messages.error(self.request, vote['message'])
+        return redirect(ticket.get_absolute_url())
 
 
 # COMMENT VIEWS #

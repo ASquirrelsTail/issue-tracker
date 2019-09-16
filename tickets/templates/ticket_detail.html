@@ -4,29 +4,6 @@
 {% block content %}
 <h1>{{ object }}</h1>
 <h2>{{ object.status|capfirst }}</h2>
-<p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
-{% if not has_voted %}
-    {% if user.is_authenticated %}
-    <form action="{% url 'vote-for-ticket' pk=object.id %}" method="post">
-        {% csrf_token %}
-        {% buttons %}
-        <button type="submit" class="btn btn-primary">Upvote</button>
-        {% endbuttons %}
-    </form>
-    {% else %}
-    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Log in to vote for this Ticket</a>   
-    {% endif %}
-{% else %}
-<p>You have already voted.</p>
-{% endif %}
-{{ object.content|linebreaks }}
-{% if object.edited %}
-    <p>Last edit {{ object.edited|date:'d/m/y H:i' }}</p>
-{% endif %}
-{% if object.user == user or perms.tickets.can_edit_all_tickets %}
-    <a href="{% url 'edit-ticket' pk=object.id %}" class="btn btn-primary">Edit Ticket</a>
-    <a href="{% url 'delete-ticket' pk=object.id %}" class="btn btn-danger">Delete Ticket</a>
-{% endif %}
 {% if perms.tickets.can_update_ticket_status %}
     {% if object.approved is None %}
         <form action="{% url 'approve-ticket' pk=object.id %}" method="post">
@@ -50,6 +27,29 @@
             {% endbuttons %}
         </form>
     {% endif %}
+{% endif %}
+<p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
+{% if not has_voted or object.ticket_type == 'Feature' %}
+    {% if user.is_authenticated %}
+    <form action="{% url 'vote-for-ticket' pk=object.id %}" method="post">
+        {% csrf_token %}
+        {% buttons %}
+        <button type="submit" class="btn btn-primary">Upvote</button>
+        {% endbuttons %}
+    </form>
+    {% else %}
+    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Log in to vote for this Ticket</a>   
+    {% endif %}
+{% else %}
+<p>You have already voted.</p>
+{% endif %}
+{{ object.content|linebreaks }}
+{% if object.edited %}
+    <p>Last edit {{ object.edited|date:'d/m/y H:i' }}</p>
+{% endif %}
+{% if object.user == user or perms.tickets.can_edit_all_tickets %}
+    <a href="{% url 'edit-ticket' pk=object.id %}" class="btn btn-primary">Edit Ticket</a>
+    <a href="{% url 'delete-ticket' pk=object.id %}" class="btn btn-danger">Delete Ticket</a>
 {% endif %}
 {% if object.approved %}
 {% if object.comments %}

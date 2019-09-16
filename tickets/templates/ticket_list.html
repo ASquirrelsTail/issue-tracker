@@ -4,7 +4,12 @@
 <h1>Tickets</h1>
 <ul>
 {% for ticket in object_list %}
-    <li><a href="{% url 'ticket' pk=ticket.pk %}">{{ ticket }}</a></li>
+    <li>
+        <a href="{% url 'ticket' pk=ticket.pk %}">{{ ticket }}</a>
+        {% if ticket.status != 'approved' %}
+         - {{ ticket.status }}
+        {% endif %}
+    </li>
 {% empty %}
 <p>No tickets yet!</p>
 {% endfor %}
