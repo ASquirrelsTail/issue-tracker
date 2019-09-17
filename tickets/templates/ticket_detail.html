@@ -31,14 +31,21 @@
 <p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
 {% if not has_voted or object.ticket_type == 'Feature' %}
     {% if user.is_authenticated %}
+    {% if object.ticket_type != 'Feature' or wallet_balance > 0 %}
     <form action="{% url 'vote-for-ticket' pk=object.id %}" method="post">
         {% csrf_token %}
+        {% if vote_form %}
+        {% bootstrap_form vote_form %}
+        {% endif %}
         {% buttons %}
         <button type="submit" class="btn btn-primary">Upvote</button>
         {% endbuttons %}
     </form>
     {% else %}
-    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Log in to vote for this Ticket</a>   
+    <a href="{% url 'get_credits' %}" class="btn btn-primary">Get more credits to vote for this {{ object.noun }}</a> 
+    {% endif %}
+    {% else %}
+    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Log in to vote for this {{ object.noun }}</a>   
     {% endif %}
 {% else %}
 <p>You have already voted.</p>

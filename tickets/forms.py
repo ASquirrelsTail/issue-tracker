@@ -49,6 +49,13 @@ class FeatureForm(TicketForm):
         }
 
 
+class VoteForm(forms.Form):
+    '''
+    Form for submitting a vote with credits.
+    '''
+    credits = forms.IntegerField(min_value=1, initial=1)
+
+
 class CommentForm(forms.ModelForm):
     '''
     Form for submitting comments and replies.

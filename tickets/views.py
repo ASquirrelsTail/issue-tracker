@@ -8,8 +8,9 @@ from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.db.models import Q
+from django.http import HttpResponseBadRequest
 from tickets.models import Ticket, Comment, Pageview
-from tickets.forms import CommentForm, TicketForm, FeatureForm, BugForm
+from tickets.forms import CommentForm, TicketForm, FeatureForm, BugForm, VoteForm
 
 
 # MIXINS #
@@ -81,10 +82,15 @@ class TicketView(AuthorOrAdminMixin, DetailView):
             return True
 
     def get_context_data(self, **kwargs):
+        '''
+        Add comment form and vote form where necessary.
+        '''
         context = super(TicketView, self).get_context_data(**kwargs)
         if self.request.user.is_authenticated:
             context['comment_form'] = CommentForm()
             context['has_voted'] = self.object.has_voted(self.request.user)
+            if self.object.ticket_type == 'Feature':
+                context['vote_form'] = VoteForm()
         return context
 
 
@@ -174,8 +180,8 @@ class SetTicketStatusView(SingleObjectMixin, PermissionRequiredMixin, View):
 
 class VoteForTicketView(SingleObjectMixin, LoginRequiredMixin, View):
     '''
-    View to add a vote to an ticket, if the user has not already voted for it.
-    Redirects to ticket page.
+    View to add a vote to a ticket, gets credits to spend on vote from submitted form
+    if type is feature. Posts success message and redirects to ticket page.
     '''
     model = Ticket
     http_method_names = ['post']
@@ -184,6 +190,13 @@ class VoteForTicketView(SingleObjectMixin, LoginRequiredMixin, View):
     def post(self, request, pk):
         credits = 1
         ticket = self.get_object()
+        if ticket.ticket_type == 'Feature':
+            # If ticket is feature request, validate the vote form and get the credits to spend on vote.
+            vote_form = VoteForm(request.POST)
+            if vote_form.is_valid():
+                credits = vote_form.cleaned_data['credits']
+            else:
+                return HttpResponseBadRequest()
         vote = ticket.vote(request.user, credits)
         if vote['success']:
             messages.success(self.request, vote['message'])
