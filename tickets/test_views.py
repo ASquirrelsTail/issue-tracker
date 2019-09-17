@@ -2,6 +2,7 @@ from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import User, Permission, AnonymousUser
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.contrib.messages import get_messages
 from django.shortcuts import reverse
 from tickets.models import Ticket, Comment
 from tickets.forms import CommentForm, TicketForm, BugForm, FeatureForm
@@ -31,6 +32,7 @@ class TicketViewsTestCase(TestCase):
 
         cls.test_ticket1 = Ticket(user=cls.test_user, title='Test title 1', content='Test content 1')
         cls.test_ticket1.save()
+        cls.test_ticket1.set_status('approved')
 
         cls.test_ticket2 = Ticket(user=cls.test_user, title='Test title 2', content='Test content 2')
         cls.test_ticket2.save()
@@ -52,13 +54,13 @@ class TicketViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'ticket_list.html')
 
-    def test_get_tickets_list_shows_tickets(self):
+    def test_get_tickets_list_shows_approved_tickets(self):
         '''
-        The tickets list page should contain names of tickets, the tickets should be
+        The tickets list page should contain names of approved tickets, the tickets should be
         passed to the page context.
         '''
         response = self.client.get('/tickets/')
-        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.all(),
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(approved=None),
                                  transform=lambda x: x, ordered=False)
 
 # TICKET DETAIL VIEW TESTS #
@@ -275,18 +277,18 @@ class TicketViewsTestCase(TestCase):
         self.client.post('/tickets/2/vote/')
         self.assertGreater(Ticket.objects.get(pk=2).no_votes, initial_votes)
 
-    def test_users_can_only_vote_once(self):
+    def test_users_can_only_vote_for_bugs_once(self):
         '''
-        Users can only vote for an ticket once, voting again returns a 403 forbidden
-        and does not increase the count.
+        Users can only vote for a bug once, voting again does not increase the count
+        and sends the user a message to notify them.
         '''
         self.client.login(username='TestUser', password='tH1$isA7357')
         self.client.post('/tickets/3/vote/')
         initial_votes = Ticket.objects.get(pk=3).no_votes
 
         response = self.client.post('/tickets/3/vote/')
-        self.assertEqual(response.status_code, 403)
         self.assertEqual(initial_votes, Ticket.objects.get(pk=3).no_votes)
+        self.assertIn('Already voted for bug fix.', map(str, get_messages(response.wsgi_request)))
 
 
 class CommentViewsTestCase(TestCase):

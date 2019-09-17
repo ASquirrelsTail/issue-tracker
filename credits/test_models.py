@@ -71,14 +71,14 @@ class WalletModelTestCase(TestCase):
         wallet.debit(42)
         self.assertTrue(Debit.objects.get(wallet=wallet, amount=42))
 
-    def test_debit_returns_wallet_balance(self):
+    def test_debit_returns_debit_object_on_success(self):
         '''
         A successful debit returns the remaining balance in the wallet.
         '''
         wallet = Wallet.objects.get(user=self.test_user)
 
         wallet.credit(10)
-        self.assertEqual(5, wallet.debit(5))
+        self.assertIsInstance(wallet.debit(5), Debit)
 
     def test_debit_fails_if_wallet_balance_insufficient(self):
         '''

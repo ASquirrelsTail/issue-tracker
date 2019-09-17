@@ -16,6 +16,7 @@ class TicketModelTestCase(TestCase):
 
         test_ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Bug', content='Test content')
         test_ticket.save()
+        test_ticket.set_status('approved')
 
     def test_ticket_str_is_ticket_no_dash_title_dash_type(self):
         '''
