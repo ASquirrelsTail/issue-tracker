@@ -86,7 +86,7 @@ class TicketView(AuthorOrAdminMixin, DetailView):
         Add comment form and vote form where necessary.
         '''
         context = super(TicketView, self).get_context_data(**kwargs)
-        if self.request.user.is_authenticated:
+        if self.request.user.is_authenticated and self.object.approved:
             context['comment_form'] = CommentForm()
             context['has_voted'] = self.object.has_voted(self.request.user)
             if self.object.ticket_type == 'Feature':

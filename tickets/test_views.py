@@ -5,7 +5,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.messages import get_messages
 from django.shortcuts import reverse
 from tickets.models import Ticket, Comment
-from tickets.forms import CommentForm, TicketForm, BugForm, FeatureForm
+from tickets.forms import CommentForm, TicketForm, BugForm, FeatureForm, VoteForm
 from tickets.views import AddTicketView
 
 
@@ -63,11 +63,20 @@ class TicketViewsTestCase(TestCase):
         self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(approved=None),
                                  transform=lambda x: x, ordered=False)
 
+    def test_get_tickets_list_shows_all_tickets_for_admin(self):
+        '''
+        The tickets list page should contain all tickets, including those waiting approval for admin users.
+        '''
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.all(),
+                                 transform=lambda x: x, ordered=False)
+
 # TICKET DETAIL VIEW TESTS #
 
     def test_get_ticket_detail(self):
         '''
-        The ticket detail view should return 200, and use the ticket_detail.html yemplate
+        The ticket detail view should return 200 for approved tickets, and use the ticket_detail.html template.
         '''
         response = self.client.get('/tickets/1/')
         self.assertEqual(response.status_code, 200)
@@ -91,6 +100,57 @@ class TicketViewsTestCase(TestCase):
         self.client.login(username='TestUser', password='tH1$isA7357')
         response = self.client.get('/tickets/1/')
         self.assertIsInstance(response.context['comment_form'], CommentForm)
+
+    def test_ticket_detail_awaiting_approval_author_and_admins_only(self):
+        '''
+        The ticket detail view should return 403 forbidden to users that are not the author, or admin
+        for unapproved tickets.
+        '''
+        response = self.client.get('/tickets/2/')
+        self.assertEqual(response.status_code, 403)
+
+        self.client.login(username='OtherUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/2/')
+        self.assertEqual(response.status_code, 403)
+        self.client.logout()
+
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/2/')
+        self.assertEqual(response.status_code, 200)
+        self.client.logout()
+
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/2/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_ticket_detail_doesnt_have_comment_form_if_awaiting_approval(self):
+        '''
+        The ticket detail view should not have the comment form in its context if the ticket is not approved.
+        '''
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/2/')
+        self.assertIsNone(response.context.get('comment_form'))
+
+    def test_ticket_detail_features_include_vote_form(self):
+        '''
+        Feature request tickets include the vote form for registered users to spend credits to vote.
+        '''
+        test_ticket = Ticket(user=self.test_user, title='Test feature',
+                             ticket_type='Feature', content='Test feature')
+        test_ticket.save()
+        test_ticket.set_status('approved')
+
+        self.client.login(username='OtherUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/{}/'.format(test_ticket.id))
+        self.assertIsInstance(response.context['vote_form'], VoteForm)
+
+    def test_ticket_detail_bugs_dont_include_vote_form(self):
+        '''
+        Bug report tickets do not include the vote form.
+        '''
+        self.client.login(username='OtherUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/1/')
+        self.assertIsNone(response.context.get('vote_form'))
 
 # ADD TICKET TESTS #
 

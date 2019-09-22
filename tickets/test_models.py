@@ -165,7 +165,7 @@ class TicketModelTestCase(TestCase):
         test_ticket = Ticket.objects.get(id=test_ticket.id)
         self.assertEqual('done', test_ticket.status)
 
-# TEST TICKET HAS_VOTED METHOD#
+# TEST TICKET HAS_VOTED METHOD #
 
     def test_has_voted_returns_false_if_user_has_not_voted(self):
         '''

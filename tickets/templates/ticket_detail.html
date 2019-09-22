@@ -29,6 +29,7 @@
     {% endif %}
 {% endif %}
 <p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
+{% if object.approved and not object.done %}
 {% if not has_voted or object.ticket_type == 'Feature' %}
     {% if user.is_authenticated %}
     {% if object.ticket_type != 'Feature' or wallet_balance > 0 %}
@@ -49,6 +50,7 @@
     {% endif %}
 {% else %}
 <p>You have already voted.</p>
+{% endif %}
 {% endif %}
 {{ object.content|linebreaks }}
 {% if object.edited %}
