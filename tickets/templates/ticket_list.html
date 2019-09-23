@@ -1,7 +1,15 @@
 {% extends "base.html" %}
+{% load bootstrap4 %}
 {% block title %}Tickets{% endblock %}
 {% block content %}
 <h1>Tickets</h1>
+<h2>Filters:</h2>
+<form action="" method="GET">
+    {% bootstrap_form filter_form %}
+    {% buttons %}
+    <button type="submit" class="btn btn-primary">Filter</button>
+    {% endbuttons %}
+</form>
 <ul>
 {% for ticket in object_list %}
     <li>

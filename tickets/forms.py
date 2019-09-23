@@ -7,6 +7,33 @@ from tickets.models import Ticket, Comment
 #         model = Label
 
 
+class FilterForm(forms.Form):
+    '''
+    For for filtering ticket list view.
+    '''
+    ORDER_BY_CHOICES = (
+        ('', 'Most Recent'),
+        ('created', 'Oldest'),
+        ('-votes', 'Most Votes'),
+        ('-views', 'Most Viewed'),
+    )
+
+    FILTER_BY_STATUS_CHOICES = (
+        ('', 'All'),
+        ('awaiting approval', 'Awaiting Approval'),
+        ('approved', 'Approved'),
+        ('doing', 'Doing'),
+        ('done', 'Done'),
+    )
+
+    FILTER_BY_TYPE_CHOICES = (('', 'All'),) + Ticket.TICKET_TYPE_CHOICES
+
+    order_by = forms.ChoiceField(choices=ORDER_BY_CHOICES, required=False)
+    status = forms.ChoiceField(choices=FILTER_BY_STATUS_CHOICES, required=False)
+    ticket_type = forms.ChoiceField(choices=FILTER_BY_TYPE_CHOICES, required=False)
+    page = forms.IntegerField(widget=forms.HiddenInput(), initial=1, required=False)
+
+
 class TicketForm(forms.ModelForm):
     '''
     Form for editing Tickets.

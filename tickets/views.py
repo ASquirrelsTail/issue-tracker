@@ -7,10 +7,10 @@ from django.utils import timezone
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Count, Sum
 from django.http import HttpResponseBadRequest
 from tickets.models import Ticket, Comment, Pageview
-from tickets.forms import CommentForm, TicketForm, FeatureForm, BugForm, VoteForm
+from tickets.forms import CommentForm, TicketForm, FeatureForm, BugForm, VoteForm, FilterForm
 
 
 # MIXINS #
@@ -32,23 +32,59 @@ class TicketsListView(ListView):
     '''
     List view for displaying tickets.
     '''
-    queryset = Ticket.objects.all().order_by('-created')
+    queryset = Ticket.objects.all()
     template_name = 'ticket_list.html'
     paginate_by = 10
 
+    def get_form_kwargs(self):
+        self.form = FilterForm(self.request.GET)
+
     def get_queryset(self):
-        if self.request.user.has_perm('tickets.can_update_status'):
-            return Ticket.objects.all().order_by('-created')
-        elif self.request.user.is_authenticated:
-            return Ticket.objects.filter(Q(user=self.request.user) | ~Q(approved=None)).order_by('-created')
+        queryset = super(TicketsListView, self).get_queryset()
+
+        if not self.request.user.is_authenticated:  # If user is not authenticated exclude tickets awaiting approval.
+            queryset = queryset.exclude(approved=None)
         else:
-            return Ticket.objects.exclude(approved=None).order_by('-created')
+            # If user is not admin exclude tickets awaiting approval thet they are not the author of.
+            if not self.request.user.has_perm('tickets.can_update_status'):
+                queryset = queryset.exclude(Q(approved=None) & ~Q(user=self.request.user))
+
+        if self.form.is_valid():
+            filters = self.form.cleaned_data
+            if filters['ticket_type'] != '':
+                queryset = queryset.filter(ticket_type=filters['ticket_type'])
+            # If ticket status specified, filter for that status by filtering for the following status being unset
+            # and excluding the current status being none.
+            if filters['status'] != '':
+                if filters['status'] == 'awaiting approval':
+                    queryset = queryset.filter(approved=None)
+                elif filters['status'] == 'approved':
+                    queryset = queryset.filter(doing=None).exclude(approved=None)
+                elif filters['status'] == 'doing':
+                    queryset = queryset.filter(done=None).exclude(doing=None)
+                elif filters['status'] == 'done':
+                    queryset = queryset.exclude(done=None)
+
+            order_by = filters['order_by'] if filters['order_by'] else '-created'
+            # Add equivilent of computed fields for no_views and no_votes to use in order_by
+            queryset = queryset.annotate(views=Count('pageview'), votes=Sum('vote__count'))
+        else:
+            order_by = '-created'
+
+        queryset = queryset.order_by(order_by)
+
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(TicketsListView, self).get_context_data(**kwargs)
         context['page_range'] = range(max(min(context['page_obj'].number - 2, context['paginator'].num_pages - 4), 1),
                                       min(max(context['page_obj'].number + 2, 5), context['paginator'].num_pages) + 1)
+        context['filter_form'] = self.form
         return context
+
+    def get(self, request):
+        self.get_form_kwargs()
+        return super(TicketsListView, self).get(request)
 
 
 class TicketView(AuthorOrAdminMixin, DetailView):
