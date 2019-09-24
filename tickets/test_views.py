@@ -1,12 +1,12 @@
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import User, Permission, AnonymousUser
 from django.contrib.messages.storage.fallback import FallbackStorage
-from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.messages import get_messages
 from django.shortcuts import reverse
 from django.utils import timezone
+from django.db.models import Q
 from datetime import timedelta
-from tickets.models import Ticket, Comment
+from tickets.models import Ticket, Comment, Vote, Pageview
 from tickets.forms import CommentForm, TicketForm, BugForm, FeatureForm, VoteForm
 from tickets.views import AddTicketView
 
@@ -349,61 +349,49 @@ class TicketListViewTestCase(TicketsTestCase):
         '''
         super(TicketListViewTestCase, cls).setUpTestData()
 
-        delay = timedelta(hours=1)
+        def create_test_tickets(count, user, ticket_type, status=None):
+            '''
+            Helper function to set up a list of tickets with the required ticket type and status.
+            Adds comments, votes and pageviews, and muddles the timestamps up a bit.
+            '''
+            delay = timedelta(hours=1)
 
-        for n in range(13):
-            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Bug', content='Test content')
-            ticket.save()
-            ticket.created = timezone.now() - (delay * 2 * n)
-            ticket.save()
+            for n in range(count):
+                ticket = Ticket(user=user, title='Test title', ticket_type=ticket_type, content='Test content')
+                ticket.save()
+                ticket.created = timezone.now() - (delay * 2 * n)
+                ticket.save()
+                if status:
+                    ticket.set_status(status)
+                for i in range(n):
+                    vote = Vote(user=cls.other_user, ticket=ticket)
+                    vote.save()
+                    pageview = Pageview(ticket=ticket)
+                    pageview.save()
+                    comment = Comment(user=cls.other_user, ticket=ticket, content='Test comment')
+                    comment.save()
 
-        for n in range(12):
-            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Feature', content='Test content')
-            ticket.save()
-            ticket.created = timezone.now() - (delay * ((2 * n) - 1))
-            ticket.save()
+        create_test_tickets(13, cls.test_user, 'Bug')
+        create_test_tickets(12, cls.test_user, 'Feature')
+        create_test_tickets(17, cls.test_user, 'Bug', 'approved')
+        create_test_tickets(19, cls.test_user, 'Feature', 'approved')
+        create_test_tickets(13, cls.test_user, 'Bug', 'doing')
+        create_test_tickets(11, cls.test_user, 'Feature', 'doing')
+        create_test_tickets(7, cls.test_user, 'Bug', 'done')
+        create_test_tickets(4, cls.test_user, 'Feature', 'done')
 
-        for n in range(17):
-            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Bug', content='Test content')
-            ticket.save()
-            ticket.created = timezone.now() - (delay * 2 * n)
-            ticket.save()
-            ticket.set_status('approved')
+        ticket = Ticket(user=cls.other_user, title='Test title', ticket_type='Bug', content='Test content')
+        ticket.save()
 
-        for n in range(19):
-            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Feature', content='Test content')
-            ticket.save()
-            ticket.created = timezone.now() - (delay * ((2 * n) - 1))
-            ticket.save()
-            ticket.set_status('approved')
-
-        for n in range(13):
-            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Bug', content='Test content')
-            ticket.save()
-            ticket.created = timezone.now() - (delay * 2 * n)
-            ticket.save()
-            ticket.set_status('doing')
-
-        for n in range(11):
-            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Feature', content='Test content')
-            ticket.save()
-            ticket.created = timezone.now() - (delay * ((2 * n) - 1))
-            ticket.save()
-            ticket.set_status('doing')
-
-        for n in range(7):
-            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Bug', content='Test content')
-            ticket.save()
-            ticket.created = timezone.now() - (delay * 2 * n)
-            ticket.save()
-            ticket.set_status('done')
-
-        for n in range(4):
-            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Feature', content='Test content')
-            ticket.save()
-            ticket.created = timezone.now() - (delay * ((2 * n) - 1))
-            ticket.save()
-            ticket.set_status('done')
+    def assertOrderedBy(self, collection, attribute, desc=True):
+        '''
+        Helper function, to check a collection is ordered by an attribute.
+        '''
+        for i in range(len(collection) - 1):
+            if desc:
+                self.assertGreaterEqual(getattr(collection[i], attribute), getattr(collection[i + 1], attribute))
+            else:
+                self.assertLessEqual(getattr(collection[i], attribute), getattr(collection[i + 1], attribute))
 
     def test_get_tickets_list(self):
         '''
@@ -429,7 +417,79 @@ class TicketListViewTestCase(TicketsTestCase):
         self.client.login(username='AdminUser', password='tH1$isA7357')
         response = self.client.get('/tickets/')
         self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.all()[:10],
-                                 transform=lambda x: x, ordered=False)
+                                 transform=lambda x: x)
+
+    def test_get_tickets_list_shows_unapproved_tickets_to_author(self):
+        '''
+        The tickets list page should contain the first 10 tickets, excluding those that are unapproved, except where they
+        were authored by the current user.
+        '''
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(Q(approved=None) & ~Q(user=self.test_user))[:10],
+                                 transform=lambda x: x)
+
+    def test_ticket_type_filters_by_ticket_type(self):
+        '''
+        Filtering by a particular ticket type should include only a list of that ticket type.
+        '''
+        response = self.client.get('/tickets/?ticket_type=Bug')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(approved=None).filter(ticket_type='Bug')[:10],
+                                 transform=lambda x: x)
+
+        response = self.client.get('/tickets/?ticket_type=Feature')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(approved=None).filter(ticket_type='Feature')[:10],
+                                 transform=lambda x: x)
+
+    def test_get_tickets_list_filters_by_status(self):
+        '''
+        Filtering by a particular status should include only a list of tickets with that status.
+        '''
+        response = self.client.get('/tickets/?status=approved')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(approved=None).filter(doing=None)[:10],
+                                 transform=lambda x: x)
+
+        response = self.client.get('/tickets/?status=doing')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(doing=None).filter(done=None)[:10],
+                                 transform=lambda x: x)
+
+        response = self.client.get('/tickets/?status=done')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(done=None)[:10],
+                                 transform=lambda x: x)
+
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/?status=awaiting+approval')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.filter(approved=None)[:10],
+                                 transform=lambda x: x)
+
+    def test_get_tickets_list_order_by_oldest(self):
+        '''
+        Ordering results by oldest first should return the oldest tickets first.
+        '''
+        response = self.client.get('/tickets/?order_by=created')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(approved=None).order_by('created')[:10],
+                                 transform=lambda x: x)
+
+    def test_get_tickets_list_order_by_most_votes(self):
+        '''
+        Ordering results by most votes should return tickets with the most votes first.
+        '''
+        response = self.client.get('/tickets/?order_by=-votes')
+        self.assertOrderedBy(response.context['object_list'], 'no_votes')
+
+    def test_get_tickets_list_order_by_most_views(self):
+        '''
+        Ordering results by most views should return tickets with the most views first.
+        '''
+        response = self.client.get('/tickets/?order_by=-views')
+        self.assertOrderedBy(response.context['object_list'], 'no_views')
+
+    def test_get_tickets_list_order_by_most_comments(self):
+        '''
+        Ordering results by most comments should return tickets with the most comments first.
+        '''
+        response = self.client.get('/tickets/?order_by=-comment_count')
+        self.assertOrderedBy(response.context['object_list'], 'no_comments')
 
 
 class CommentViewsTestCase(TestCase):

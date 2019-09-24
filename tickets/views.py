@@ -67,7 +67,7 @@ class TicketsListView(ListView):
 
             if filters['order_by']:
                 if filters['order_by'] != 'created':
-                    queryset = queryset.annotate(views=Count('pageview'), votes=Sum('vote__count'))
+                    queryset = queryset.annotate(views=Count('pageview'), votes=Sum('vote__count'), comment_count=Count('comment'))
                 queryset = queryset.order_by(filters['order_by'])
 
         return queryset

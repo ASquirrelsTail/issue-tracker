@@ -16,6 +16,7 @@ class FilterForm(forms.Form):
         ('created', 'Oldest'),
         ('-votes', 'Most Votes'),
         ('-views', 'Most Viewed'),
+        ('-comment_count', 'Most Comments'),
     )
 
     FILTER_BY_STATUS_CHOICES = (
