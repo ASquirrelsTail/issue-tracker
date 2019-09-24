@@ -65,13 +65,10 @@ class TicketsListView(ListView):
                 elif filters['status'] == 'done':
                     queryset = queryset.exclude(done=None)
 
-            order_by = filters['order_by'] if filters['order_by'] else '-created'
-            # Add equivilent of computed fields for no_views and no_votes to use in order_by
-            queryset = queryset.annotate(views=Count('pageview'), votes=Sum('vote__count'))
-        else:
-            order_by = '-created'
-
-        queryset = queryset.order_by(order_by)
+            if filters['order_by']:
+                if filters['order_by'] != 'created':
+                    queryset = queryset.annotate(views=Count('pageview'), votes=Sum('vote__count'))
+                queryset = queryset.order_by(filters['order_by'])
 
         return queryset
 

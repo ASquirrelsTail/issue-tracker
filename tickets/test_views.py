@@ -4,14 +4,16 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.messages import get_messages
 from django.shortcuts import reverse
+from django.utils import timezone
+from datetime import timedelta
 from tickets.models import Ticket, Comment
 from tickets.forms import CommentForm, TicketForm, BugForm, FeatureForm, VoteForm
 from tickets.views import AddTicketView
 
 
-class TicketViewsTestCase(TestCase):
+class TicketsTestCase(TestCase):
     '''
-    Class to test Ticket views.
+    Abstract class for testing tickets.
     '''
 
     @classmethod
@@ -30,6 +32,19 @@ class TicketViewsTestCase(TestCase):
                                                   password='tH1$isA7357')
         cls.other_user.save()
 
+    def setUp(self):
+        self.client.logout()
+
+
+class TicketViewsTestCase(TicketsTestCase):
+    '''
+    Class to test Ticket views.
+    '''
+
+    @classmethod
+    def setUpTestData(cls):
+        super(TicketViewsTestCase, cls).setUpTestData()
+
         cls.test_ticket1 = Ticket(user=cls.test_user, title='Test title 1', content='Test content 1')
         cls.test_ticket1.save()
         cls.test_ticket1.set_status('approved')
@@ -39,38 +54,6 @@ class TicketViewsTestCase(TestCase):
 
         cls.test_ticket3 = Ticket(user=cls.test_user, title='Test title 2', content='Test content 2')
         cls.test_ticket3.save()
-
-    def setUp(self):
-        self.factory = RequestFactory()
-        self.client.logout()
-
-# TICKET LIST TESTS #
-
-    def test_get_tickets_list(self):
-        '''
-        The tickets list should return 200, and use the ticket_list.html template.
-        '''
-        response = self.client.get('/tickets/')
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'ticket_list.html')
-
-    def test_get_tickets_list_shows_approved_tickets(self):
-        '''
-        The tickets list page should contain names of approved tickets, the tickets should be
-        passed to the page context.
-        '''
-        response = self.client.get('/tickets/')
-        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(approved=None),
-                                 transform=lambda x: x, ordered=False)
-
-    def test_get_tickets_list_shows_all_tickets_for_admin(self):
-        '''
-        The tickets list page should contain all tickets, including those waiting approval for admin users.
-        '''
-        self.client.login(username='AdminUser', password='tH1$isA7357')
-        response = self.client.get('/tickets/')
-        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.all(),
-                                 transform=lambda x: x, ordered=False)
 
 # TICKET DETAIL VIEW TESTS #
 
@@ -159,21 +142,23 @@ class TicketViewsTestCase(TestCase):
         The add ticket view should redirect to the login page for anonymous users, and
         return 200 for logged in users.
         '''
-        request = self.factory.get('/tickets/add/')
+        factory = RequestFactory()
+        request = factory.get('/tickets/add/')
         request.user = AnonymousUser()
 
         response = AddTicketView.as_view()(request)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('login') + '?next=/tickets/add/')
 
-        request = self.factory.get('/tickets/add/')
+        request = factory.get('/tickets/add/')
         request.user = self.test_user
 
         response = AddTicketView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
     def test_post_add_ticket_redirects_anonymous(self):
-        request = self.factory.post('/tickets/add/', {'title': 'New Ticket', 'content': 'It\'s new!'})
+        factory = RequestFactory()
+        request = factory.post('/tickets/add/', {'title': 'New Ticket', 'content': 'It\'s new!'})
         request.user = AnonymousUser()
 
         response = AddTicketView.as_view()(request)
@@ -185,7 +170,8 @@ class TicketViewsTestCase(TestCase):
         Post requests to add ticket with valid input should create a new ticket, and redirect
         to that ticket's page.
         '''
-        request = self.factory.post('/tickets/add/', {'title': 'New Ticket', 'ticket_type': 'Bug', 'content': 'It\'s new!'})
+        factory = RequestFactory()
+        request = factory.post('/tickets/add/', {'title': 'New Ticket', 'ticket_type': 'Bug', 'content': 'It\'s new!'})
         request.user = self.test_user
         request.session = 'session'
         request._messages = FallbackStorage(request)
@@ -349,6 +335,101 @@ class TicketViewsTestCase(TestCase):
         response = self.client.post('/tickets/3/vote/')
         self.assertEqual(initial_votes, Ticket.objects.get(pk=3).no_votes)
         self.assertIn('Already voted for bug fix.', map(str, get_messages(response.wsgi_request)))
+
+
+class TicketListViewTestCase(TicketsTestCase):
+    '''
+    Class to test TicketListView.
+    '''
+
+    @classmethod
+    def setUpTestData(cls):
+        '''
+        Prepare list of tickets to test filters against.
+        '''
+        super(TicketListViewTestCase, cls).setUpTestData()
+
+        delay = timedelta(hours=1)
+
+        for n in range(13):
+            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Bug', content='Test content')
+            ticket.save()
+            ticket.created = timezone.now() - (delay * 2 * n)
+            ticket.save()
+
+        for n in range(12):
+            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Feature', content='Test content')
+            ticket.save()
+            ticket.created = timezone.now() - (delay * ((2 * n) - 1))
+            ticket.save()
+
+        for n in range(17):
+            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Bug', content='Test content')
+            ticket.save()
+            ticket.created = timezone.now() - (delay * 2 * n)
+            ticket.save()
+            ticket.set_status('approved')
+
+        for n in range(19):
+            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Feature', content='Test content')
+            ticket.save()
+            ticket.created = timezone.now() - (delay * ((2 * n) - 1))
+            ticket.save()
+            ticket.set_status('approved')
+
+        for n in range(13):
+            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Bug', content='Test content')
+            ticket.save()
+            ticket.created = timezone.now() - (delay * 2 * n)
+            ticket.save()
+            ticket.set_status('doing')
+
+        for n in range(11):
+            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Feature', content='Test content')
+            ticket.save()
+            ticket.created = timezone.now() - (delay * ((2 * n) - 1))
+            ticket.save()
+            ticket.set_status('doing')
+
+        for n in range(7):
+            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Bug', content='Test content')
+            ticket.save()
+            ticket.created = timezone.now() - (delay * 2 * n)
+            ticket.save()
+            ticket.set_status('done')
+
+        for n in range(4):
+            ticket = Ticket(user=cls.test_user, title='Test title', ticket_type='Feature', content='Test content')
+            ticket.save()
+            ticket.created = timezone.now() - (delay * ((2 * n) - 1))
+            ticket.save()
+            ticket.set_status('done')
+
+    def test_get_tickets_list(self):
+        '''
+        The tickets list should return 200, and use the ticket_list.html template.
+        '''
+        response = self.client.get('/tickets/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'ticket_list.html')
+
+    def test_get_tickets_list_shows_approved_tickets(self):
+        '''
+        The tickets list page should contain approved tickets, the tickets first 10 should be
+        passed to the page context.
+        '''
+        response = self.client.get('/tickets/')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(approved=None)[:10],
+                                 transform=lambda x: x)
+
+    def test_get_tickets_list_shows_all_tickets_for_admin(self):
+        '''
+        The tickets list page should contain the first 10 tickets, including those waiting approval for admin users.
+        '''
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.all()[:10],
+                                 transform=lambda x: x, ordered=False)
 
 
 class CommentViewsTestCase(TestCase):
