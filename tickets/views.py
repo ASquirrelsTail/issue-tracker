@@ -56,7 +56,7 @@ class TicketsListView(ListView):
             # If ticket status specified, filter for that status by filtering for the following status being unset
             # and excluding the current status being none.
             if filters['status'] != '':
-                if filters['status'] == 'awaiting approval':
+                if filters['status'] == 'awaiting':
                     queryset = queryset.filter(approved=None)
                 elif filters['status'] == 'approved':
                     queryset = queryset.filter(doing=None).exclude(approved=None)
@@ -74,9 +74,23 @@ class TicketsListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(TicketsListView, self).get_context_data(**kwargs)
+
+        # Build query string for pagination
+        queries = []
+        for key, value in self.form.cleaned_data.items():
+            if value != '':
+                queries.append(key + '=' + value)
+        queries.append('page=')
+        context['query_string'] = '?' + '&'.join(queries)
+
+        # Work out range of pages to show in pagination. Max of 5, +- 2 pages in each direction if possible, otherwise up to +- 4 at ends of range.
         context['page_range'] = range(max(min(context['page_obj'].number - 2, context['paginator'].num_pages - 4), 1),
                                       min(max(context['page_obj'].number + 2, 5), context['paginator'].num_pages) + 1)
+
+        context['no_tickets'] = self.get_queryset().count()
+
         context['filter_form'] = self.form
+
         return context
 
     def get(self, request):

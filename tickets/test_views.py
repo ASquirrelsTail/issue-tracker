@@ -458,7 +458,7 @@ class TicketListViewTestCase(TicketsTestCase):
                                  transform=lambda x: x)
 
         self.client.login(username='AdminUser', password='tH1$isA7357')
-        response = self.client.get('/tickets/?status=awaiting+approval')
+        response = self.client.get('/tickets/?status=awaiting')
         self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.filter(approved=None)[:10],
                                  transform=lambda x: x)
 

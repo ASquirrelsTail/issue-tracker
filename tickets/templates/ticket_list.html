@@ -10,6 +10,9 @@
     <button type="submit" class="btn btn-primary">Filter</button>
     {% endbuttons %}
 </form>
+{% if object_list %}
+<h3>{{ no_tickets }} Tickets</h3>
+{% endif %}
 <ul>
 {% for ticket in object_list %}
     <li>
@@ -28,7 +31,7 @@
     {% if is_paginated %}
         {% if page_obj.has_previous %}
         <li class="page-item">
-            <a class="page-link" href="{% url 'tickets-list' %}?page={{ page_obj.previous_page_number }}">Previous</a>
+            <a class="page-link" href="{% url 'tickets-list' %}{{ query_string }}{{ page_obj.previous_page_number }}">Previous</a>
         </li>
         {% else %}
         <li class="page-item disabled">
@@ -44,12 +47,12 @@
             </span>
         </li>
         {% else %}
-        <li class="page-item"><a class="page-link" href="{% url 'tickets-list' %}?page={{ page_number }}">{{ page_number }}</a></li>
+        <li class="page-item"><a class="page-link" href="{% url 'tickets-list' %}{{ query_string }}{{ page_number }}">{{ page_number }}</a></li>
         {% endif %}
         {% endfor %}
         {% if page_obj.has_next %}
         <li class="page-item">
-            <a class="page-link" href="{% url 'tickets-list' %}?page={{ page_obj.next_page_number }}">Next</a>
+            <a class="page-link" href="{% url 'tickets-list' %}{{ query_string }}{{ page_obj.next_page_number }}">Next</a>
         </li>
         {% else %}
         <li class="page-item disabled">
