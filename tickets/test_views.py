@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta
 from tickets.models import Ticket, Comment, Vote, Pageview
-from tickets.forms import CommentForm, TicketForm, BugForm, FeatureForm, VoteForm
+from tickets.forms import CommentForm, TicketForm, BugForm, FeatureForm, VoteForm, FilterForm
 from tickets.views import AddTicketView
 
 
@@ -371,6 +371,7 @@ class TicketListViewTestCase(TicketsTestCase):
                     comment = Comment(user=cls.other_user, ticket=ticket, content='Test comment')
                     comment.save()
 
+        # Create a variety of tickets to use in test querysets
         create_test_tickets(13, cls.test_user, 'Bug')
         create_test_tickets(12, cls.test_user, 'Feature')
         create_test_tickets(17, cls.test_user, 'Bug', 'approved')
@@ -429,7 +430,14 @@ class TicketListViewTestCase(TicketsTestCase):
         self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(Q(approved=None) & ~Q(user=self.test_user))[:10],
                                  transform=lambda x: x)
 
-    def test_ticket_type_filters_by_ticket_type(self):
+    def test_get_tickets_list_includes_filter_form(self):
+        '''
+        The ticket list page context should include the filter form.
+        '''
+        response = self.client.get('/tickets/')
+        self.assertIsInstance(response.context['filter_form'], FilterForm)
+
+    def test_get_tickets_list_filters_by_ticket_type(self):
         '''
         Filtering by a particular ticket type should include only a list of that ticket type.
         '''
@@ -490,6 +498,102 @@ class TicketListViewTestCase(TicketsTestCase):
         '''
         response = self.client.get('/tickets/?order_by=-comment_count')
         self.assertOrderedBy(response.context['object_list'], 'no_comments')
+
+    def test_get_tickets_list_no_tickets(self):
+        '''
+        The total number of tickets matching the current query should be added to the context.
+        '''
+        response = self.client.get('/tickets/')
+        self.assertEqual(71, response.context['no_tickets'])
+
+        response = self.client.get('/tickets/?ticket_type=Bug')
+        self.assertEqual(37, response.context['no_tickets'])
+
+        response = self.client.get('/tickets/?ticket_type=Feature')
+        self.assertEqual(34, response.context['no_tickets'])
+
+        response = self.client.get('/tickets/?ticket_type=Feature&status=done')
+        self.assertEqual(4, response.context['no_tickets'])
+
+    def test_get_tickets_list_pagination(self):
+        '''
+        The the ticket list page query arg should return the correct range of tickets in the query.
+        '''
+        response = self.client.get('/tickets/?page=2')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(approved=None)[10:20],
+                                 transform=lambda x: x)
+
+        response = self.client.get('/tickets/?ticket_type=Feature&page=3')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(approved=None).filter(ticket_type='Feature')[20:30],
+                                 transform=lambda x: x)
+
+        response = self.client.get('/tickets/?ticket_type=Feature&status=approved&page=2')
+        self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.exclude(approved=None).filter(ticket_type='Feature', doing=None)[10:19],
+                                 transform=lambda x: x)
+
+    def test_get_tickets_list_page_out_of_bounds_not_found(self):
+        '''
+        Pages beyond the range of results should return 404 not found.
+        '''
+        response = self.client.get('/tickets/?page=25')
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.get('/tickets/?ticket_type=Feature&status=approved&page=3')
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_ticket_list_pagination_page_range(self):
+        '''
+        The page range for use in pagination should be up to 5 adjacent pages. Ideally +- 2 pages from the current one,
+        or +4 from the first page, -4 from the last, or -1 +3 for the second page, or -3 +1 for the second last page.
+        '''
+
+        # Page one shows pagination for pages 1 through 5.
+        response = self.client.get('/tickets/')
+        self.assertEqual(range(1, 6), response.context['page_range'])
+
+        # Page two and three also show pagination for pages 1 through 5.
+        response = self.client.get('/tickets/?page=2')
+        self.assertEqual(range(1, 6), response.context['page_range'])
+
+        response = self.client.get('/tickets/?page=3')
+        self.assertEqual(range(1, 6), response.context['page_range'])
+
+        # Page five shows pagination for pages 3 through 7
+        response = self.client.get('/tickets/?page=5')
+        self.assertEqual(range(3, 8), response.context['page_range'])
+
+        # Pages six through eight (the final page for this queryset) show pagination for pages 4 through 8.
+        response = self.client.get('/tickets/?page=6')
+        self.assertEqual(range(4, 9), response.context['page_range'])
+
+        response = self.client.get('/tickets/?page=7')
+        self.assertEqual(range(4, 9), response.context['page_range'])
+
+        response = self.client.get('/tickets/?page=8')
+        self.assertEqual(range(4, 9), response.context['page_range'])
+
+    def test_tickets_list_query_string_contains_query(self):
+        '''
+        The query string should be added to the context for use in pagination to preserve the query
+        and add the page number.
+        '''
+        response = self.client.get('/tickets/')
+        self.assertEqual('?page=', response.context['query_string'])
+
+        response = self.client.get('/tickets/?page=3')
+        self.assertEqual('?page=', response.context['query_string'])
+
+        response = self.client.get('/tickets/?ticket_type=Bug')
+        self.assertEqual('?ticket_type=Bug&page=', response.context['query_string'])
+
+        response = self.client.get('/tickets/?ticket_type=Bug&page=2')
+        self.assertEqual('?ticket_type=Bug&page=', response.context['query_string'])
+
+        response = self.client.get('/tickets/?order_by=-votes&ticket_type=Bug')
+        self.assertEqual('?order_by=-votes&ticket_type=Bug&page=', response.context['query_string'])
+
+        response = self.client.get('/tickets/?order_by=-votes&status=approved&ticket_type=Bug')
+        self.assertEqual('?order_by=-votes&status=approved&ticket_type=Bug&page=', response.context['query_string'])
 
 
 class CommentViewsTestCase(TestCase):
