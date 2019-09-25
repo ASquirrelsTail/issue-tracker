@@ -18,12 +18,14 @@ from django.contrib import admin
 from account import urls as account_urls
 from tickets import urls as tickets_urls
 from credits import urls as credits_urls
-from django.views.generic import TemplateView
+from stats import urls as stats_urls
+from stats.views import IndexView
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^account/', include(account_urls)),
     url(r'^tickets/', include(tickets_urls)),
     url(r'^credits/', include(credits_urls)),
-    url(r'^$', TemplateView.as_view(template_name="index.html"), name='index'),
+    url(r'^stats/', include(stats_urls)),
+    url(r'^$', IndexView.as_view(), name='index'),
 ]

@@ -26,7 +26,8 @@ class Ticket(models.Model):
 
     class Meta:
         permissions = (('can_update_status', 'Update Ticket status.'),
-                       ('can_edit_all_tickets', 'Edit any user\'s ticket'),)
+                       ('can_edit_all_tickets', 'Edit any user\'s ticket'),
+                       ('can_view_all_stats', 'View stats for any ticket'),)
         ordering = ['-created']
 
     def __str__(self):

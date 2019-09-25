@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'account',
     'tickets',
     'credits',
+    'stats',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

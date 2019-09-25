@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Home Page{% endblock %}
+{% block content %}
+    <h1>Home Page</h1>
+    <h2>{{ bugs_this_week }} Bug{% if bugs_this_week != 1 %}s{% endif %} Crushed This Week</h2>
+    <h2>{{ features_coming_soon }} New Feature{% if features_coming_soon != 1 %}s{% endif %} Coming Soon</h2>
+    <h2>{{ avg_time_to_bugfix }} Average Time To Bug Fix</h2>
+    <h2><a href="{{ most_requested_feature_url }}">No. 1 Most Requested Feature</a></h2>
+{% endblock %}
