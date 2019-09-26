@@ -19,7 +19,7 @@ from account import urls as account_urls
 from tickets import urls as tickets_urls
 from credits import urls as credits_urls
 from stats import urls as stats_urls
-from stats.views import IndexView
+from stats.views import IndexView, RoadmapView
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -27,5 +27,6 @@ urlpatterns = [
     url(r'^tickets/', include(tickets_urls)),
     url(r'^credits/', include(credits_urls)),
     url(r'^stats/', include(stats_urls)),
+    url(r'^roadmap/$', RoadmapView.as_view(), name='roadmap'),
     url(r'^$', IndexView.as_view(), name='index'),
 ]

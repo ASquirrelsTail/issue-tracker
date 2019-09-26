@@ -2,7 +2,7 @@
 {% load bootstrap4 %}
 {% block title %}Home Page{% endblock %}
 {% block content %}
-    <h1><a href="{{ ticket_url }}">{{ object }}</a></h1>
+    <h1><a href="{% url 'ticket' pk=object.pk %}">{{ object }}</a></h1>
     <form action="" method="GET">
         {% bootstrap_form date_range_form %}
         {% buttons %}

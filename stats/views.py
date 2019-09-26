@@ -89,7 +89,6 @@ class TicketStatsView(AuthorOrAdminMixin, DetailView):
         context['votes'] = json.dumps(list(self.get_date_range_and_annotate(self.object.vote_set).values('date', 'count')))
 
         context['date_range_form'] = self.form
-        context['ticket_url'] = self.object.get_absolute_url()
 
         return context
 
@@ -130,3 +129,18 @@ class AllTicketStatsView(PermissionRequiredMixin, TemplateView, ContextMixin):
     def get(self, request):
         self.get_form_kwargs()
         return super(AllTicketStatsView, self).get(request)
+
+
+class RoadmapView(TemplateView, ContextMixin):
+    '''
+    View for displaying roadmap with features and bugs with statuses of done and doing.
+    '''
+    template_name = 'roadmap.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(RoadmapView, self).get_context_data(**kwargs)
+
+        context['bugs'] = Ticket.objects.filter(ticket_type='Bug').exclude(doing=None).extra(select={'is_doing': 'done IS NULL'}).extra(order_by=['-is_doing', '-done'])
+        context['features'] = Ticket.objects.filter(ticket_type='Feature').exclude(doing=None).extra(select={'is_doing': 'done IS NULL'}).extra(order_by=['-is_doing', '-done'])
+
+        return context

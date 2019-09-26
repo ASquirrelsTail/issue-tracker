@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Roadmap{% endblock %}
+{% block content %}
+    <h1>Roadmap</h1>
+    <h2>Features</h2>
+    <ul>
+    {% for ticket in features %}
+        <li>
+            <a href="{% url 'ticket' pk=ticket.pk %}">
+                {% if ticket.done %}
+                {{ ticket.done }} - {{ ticket.title }}
+                {% else %}
+                Coming Soon - {{ ticket.title }}
+                {% endif %}
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+    <h2>Bugs</h2>
+    <ul>
+    {% for ticket in bugs %}
+        <li>
+            <a href="{% url 'ticket' pk=ticket.pk %}">
+                {% if ticket.done %}
+                {{ ticket.done }} - {{ ticket.title }}
+                {% else %}
+                Coming Soon - {{ ticket.title }}
+                {% endif %}
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+{% endblock %}
