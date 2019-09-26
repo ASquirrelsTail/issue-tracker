@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load bootstrap4 %}
+{% block title %}Home Page{% endblock %}
+{% block content %}
+    <h1>All ticket stats</h1>
+    <form action="" method="GET">
+        {% bootstrap_form date_range_form %}
+        {% buttons %}
+        <button type="submit" class="btn btn-primary">Filter</button>
+        {% endbuttons %}
+    </form>
+    {{ tickets }}
+    {{ comments }}
+    {{ votes }}
+    {{ views }}
+{% endblock %}

@@ -1,23 +1,45 @@
 from django.views.generic.base import TemplateView, ContextMixin
 from django.views.generic import DetailView
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Avg, Sum, TextField, DateField
 from django.db.models.functions import Cast, TruncDay
 from django.utils import timezone
 from datetime import timedelta
+import json
 from tickets.models import Ticket, Pageview, Vote, Comment
 from tickets.views import AuthorOrAdminMixin
 from stats.forms import DateRangeForm
+
+
+def filter_date_range(queryset, status, start=None, end=None):
+    '''
+    Filters a queryset for a given status between a date range
+    '''
+    query = {}
+    if start:
+        query[status + '__date__gte'] = start
+    if end:
+        query[status + '__date__lte'] = end
+    if query != {}:
+        return queryset.filter(**query)
+    else:
+        return queryset
 
 
 def last_x_days(queryset, status, days):
     '''
     Function for filtering a queryset for a given status being set in the last X days.
     '''
-    x_days = timedelta(days=days)
-    query = {status + '__gte': timezone.now() - x_days}
-    queryset = queryset.filter(**query)
-    return queryset
+    start_date = timezone.now().date() - timedelta(days=days)
+    return filter_date_range(queryset, status, start=start_date)
+
+
+def annotate_date(queryset, status, field_name='date'):
+    '''
+    Annotates queryset with a 'date' field, created from the chosen status.
+    '''
+    annotation = {field_name: Cast(TruncDay(status, DateField()), TextField())}
+    return queryset.annotate(**annotation)
 
 
 class IndexView(TemplateView, ContextMixin):
@@ -53,20 +75,18 @@ class TicketStatsView(AuthorOrAdminMixin, DetailView):
         self.form = DateRangeForm(self.request.GET)
         self.form.is_valid()
 
-    def get_date_range(self, queryset):
-        if self.form.cleaned_data['start_date']:
-            queryset = queryset.filter(created__date__gte=self.form.cleaned_data['start_date'])
-        if self.form.cleaned_data['end_date']:
-            queryset = queryset.filter(created__date__lte=self.form.cleaned_data['end_date'])
+    def get_date_range_and_annotate(self, queryset):
+        queryset = filter_date_range(queryset, 'created', self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
+        queryset = annotate_date(queryset, 'created')
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super(TicketStatsView, self).get_context_data(**kwargs)
 
         # Add stats to page context
-        context['comments'] = self.get_date_range(self.object.comment_set).annotate(date=Cast(TruncDay('created', DateField()), TextField())).values('date')
-        context['views'] = self.get_date_range(self.object.pageview_set).annotate(date=Cast(TruncDay('created', DateField()), TextField())).values('date')
-        context['votes'] = self.get_date_range(self.object.vote_set).annotate(date=Cast(TruncDay('created', DateField()), TextField())).values('date', 'count')
+        context['comments'] = json.dumps(list(self.get_date_range_and_annotate(self.object.comment_set).values('date')))
+        context['views'] = json.dumps(list(self.get_date_range_and_annotate(self.object.pageview_set).values('date')))
+        context['votes'] = json.dumps(list(self.get_date_range_and_annotate(self.object.vote_set).values('date', 'count')))
 
         context['date_range_form'] = self.form
         context['ticket_url'] = self.object.get_absolute_url()
@@ -76,3 +96,37 @@ class TicketStatsView(AuthorOrAdminMixin, DetailView):
     def get(self, request, pk):
         self.get_form_kwargs()
         return super(TicketStatsView, self).get(request, pk)
+
+
+class AllTicketStatsView(PermissionRequiredMixin, TemplateView, ContextMixin):
+    '''
+    View for displaying stats across all tickets. Only accessible to admin users.
+    '''
+    permission_required = 'tickets.can_view_all_stats'
+    raise_exception = True
+    template_name = 'ticket_stats_all.html'
+
+    def get_form_kwargs(self):
+        self.form = DateRangeForm(self.request.GET)
+        self.form.is_valid()
+
+    def get_date_range_and_annotate(self, queryset):
+        queryset = filter_date_range(queryset, 'created', self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
+        queryset = annotate_date(queryset, 'created')
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super(AllTicketStatsView, self).get_context_data(**kwargs)
+
+        context['tickets'] = json.dumps(list(self.get_date_range_and_annotate(Ticket.objects.all()).values('date', 'ticket_type')))
+        context['comments'] = json.dumps(list(self.get_date_range_and_annotate(Comment.objects.all()).values('date')))
+        context['views'] = json.dumps(list(self.get_date_range_and_annotate(Pageview.objects.all()).values('date')))
+        context['votes'] = json.dumps(list(self.get_date_range_and_annotate(Vote.objects.all()).values('date', 'count')))
+
+        context['date_range_form'] = self.form
+
+        return context
+
+    def get(self, request):
+        self.get_form_kwargs()
+        return super(AllTicketStatsView, self).get(request)
