@@ -51,13 +51,14 @@ class TicketStatsView(AuthorOrAdminMixin, DetailView):
 
     def get_form_kwargs(self):
         self.form = DateRangeForm(self.request.GET)
+        self.form.is_valid()
 
     def get_date_range(self, queryset):
-        # if self.form.cleaned_data:
-        #     dates = self.form.cleaned_data
-        #     return queryset.filter(created__date__gte=dates['start_date'], created__date__lte=dates['end_date'])
-        # else:
-        return queryset.filter(created__date__gte=timezone.now().date() - timedelta(days=7))
+        if self.form.cleaned_data['start_date']:
+            queryset = queryset.filter(created__date__gte=self.form.cleaned_data['start_date'])
+        if self.form.cleaned_data['end_date']:
+            queryset = queryset.filter(created__date__lte=self.form.cleaned_data['end_date'])
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(TicketStatsView, self).get_context_data(**kwargs)
@@ -74,5 +75,4 @@ class TicketStatsView(AuthorOrAdminMixin, DetailView):
 
     def get(self, request, pk):
         self.get_form_kwargs()
-        self.form.is_valid()
         return super(TicketStatsView, self).get(request, pk)
