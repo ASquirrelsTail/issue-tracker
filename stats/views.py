@@ -58,7 +58,7 @@ class IndexView(TemplateView, ContextMixin):
         # context['avg_time_to_bugfix'] = str(avg_bug_time_taken)
         try:
             context['most_requested_feature_url'] = Ticket.objects.exclude(approved=None, done=None).annotate(votes=Sum('vote__count')).order_by('votes')[0].get_absolute_url()
-        except Ticket.DoesNotExist:
+        except (IndexError, Ticket.DoesNotExist):
             context['most_requested_feature_url'] = None
         return context
 
