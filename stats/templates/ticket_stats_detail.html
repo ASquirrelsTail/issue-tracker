@@ -1,15 +1,137 @@
 {% extends "base.html" %}
 {% load bootstrap4 %}
+{% load static %}
 {% block title %}Home Page{% endblock %}
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/dc.css' %}">
+{% endblock %}
 {% block content %}
     <h1><a href="{% url 'ticket' pk=object.pk %}">{{ object }}</a></h1>
+    <p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
     <form action="" method="GET">
         {% bootstrap_form date_range_form %}
         {% buttons %}
         <button type="submit" class="btn btn-primary">Filter</button>
         {% endbuttons %}
     </form>
-    {{ comments }}
-    {{ votes }}
-    {{ views }}
+    <div id="chart" class="col-sm-12"></div>
+{% endblock %}
+{% block javascript %}
+    <script src="{% static 'js/libs/d3.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/libs/crossfilter.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/libs/dc.js' %}" type="text/javascript"></script>
+    <script>
+        let dataset = {{ chart_data|safe }};
+
+        const colors = {
+            pink: '#f92672',
+            green: '#a6e22e',
+            blue: '#66d9ef',
+            orange: '#fd971f',
+            purple: '#ae81ff'
+        }
+
+        function combineData(data) {
+        // Returns crossfilter of combined results.
+            let combined = []
+            Object.keys(data).forEach((type) => {
+                data[type].forEach((record) => {
+                    record.type = type;
+                    record.date = d3.time.format('%Y-%m-%d').parse(record.date.slice(0, 10));
+                });
+                combined = combined.concat(data[type]);
+            });
+
+            return combined;
+        }
+
+        function createGroupFrom(dimension, type) {
+            // Creates a grouping from the given engagement type.
+            let group =  dimension.group().reduce(
+                (p, v) => {
+                    if (v.type === type) p.total += v.total;
+                    return p;
+                }, (p, v) => {
+                    if (v.type === type) p.total -= v.total;
+                    return p;
+                }, () => {
+                    return {total: 0, type: type};
+            });
+            
+            // Create a fake group to show start and end of engagement spikes.
+            let fakeGroup = {
+                all() {
+                    let newGroup = [];
+                    group.all().forEach((record) => {
+                        if (record.value.total > 0) {
+                            newGroup.push({key: new Date(record.key.getTime() - 86400000), value: {total: 0, type: type}});
+                            newGroup.push(record);
+                            newGroup.push({key: new Date(record.key.getTime() + 86400000), value: {total: 0, type: type}});
+                        }
+                    });
+
+                    return newGroup;
+                }
+            }
+
+            return fakeGroup;
+        }
+
+        function createLineChart(chart, dimension, group, color) {
+            // Create a line chart for the group to use as part of the composite.
+            return dc.lineChart(chart)
+                     .dimension(dimension)
+                     .group(group)
+                     .valueAccessor((d) => d.value.total)
+                     .title((d) => `${d.key.toDateString()}: ${d.value.total} ${d.value.type}`)
+                     .colors(color)
+                     .transitionDuration(500)
+        }
+
+        function createCompositeChart(chartID, ndx) {
+            // Create a composite line chart of comments, views and votes.
+            let chart = dc.compositeChart('#' + chartID);
+
+            let dateDim = ndx.dimension(dc.pluck('date'));
+            
+            // Create groups for each type of engagement
+            let commentGroup = createGroupFrom(dateDim, 'comments');
+            let viewGroup = createGroupFrom(dateDim, 'views');
+            let voteGroup = createGroupFrom(dateDim, 'votes');
+
+            let minDate, maxDate;
+            
+            // If the date range has been set by the user, use that range for the chart, otherwise use defaults.
+            if ($('#id_start_date').val() != '') minDate = d3.time.format('%Y-%m-%d').parse($('#id_start_date').val());
+            else minDate = new Date(dateDim.bottom(1)[0].date - 86400000)
+            if ($('#id_end_date').val() != '') maxDate = d3.time.format('%Y-%m-%d').parse($('#id_end_date').val());
+            else maxDate = new Date().setHours(0,0,0,0);
+            
+            // Set up the chart.
+            chart.margins({ top: 15, right: 50, left: 50, bottom: 30 })
+                 .brushOn(false)
+                 .transitionDuration(500)
+                 .shareTitle(false)
+                 .yAxisLabel('Count', 25)
+                 .x(d3.time.scale().domain([minDate, maxDate]))
+                 .yAxis().ticks(4);
+            
+            // Add line charts for each engagement type.
+            chart.compose([
+                createLineChart(chart, dateDim, commentGroup, colors.blue),
+                createLineChart(chart, dateDim, viewGroup, colors.purple),
+                createLineChart(chart, dateDim, voteGroup, colors.green)
+            ]);
+
+            return chart;
+        }
+
+        $(() => {
+            // Create and render the chart on page load.
+            let ndx = crossfilter(combineData(dataset));
+            createCompositeChart('chart', ndx);
+            dc.renderAll();
+        });
+
+    </script>
 {% endblock %}

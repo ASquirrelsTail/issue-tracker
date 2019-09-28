@@ -1,7 +1,7 @@
 from django.views.generic.base import TemplateView, ContextMixin
 from django.views.generic import DetailView
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db.models import Avg, Sum, TextField, DateField
+from django.db.models import Avg, Sum, Count, TextField, DateField
 from django.db.models.functions import Cast, TruncDay
 from django.utils import timezone
 from datetime import timedelta
@@ -84,9 +84,12 @@ class TicketStatsView(AuthorOrAdminMixin, DetailView):
         context = super(TicketStatsView, self).get_context_data(**kwargs)
 
         # Add stats to page context
-        context['comments'] = json.dumps(list(self.get_date_range_and_annotate(self.object.comment_set).values('date')))
-        context['views'] = json.dumps(list(self.get_date_range_and_annotate(self.object.pageview_set).values('date')))
-        context['votes'] = json.dumps(list(self.get_date_range_and_annotate(self.object.vote_set).values('date', 'count')))
+        chart_data = {}
+        chart_data['comments'] = list(self.get_date_range_and_annotate(self.object.comment_set).values('date').annotate(total=Count('date')))
+        chart_data['views'] = list(self.get_date_range_and_annotate(self.object.pageview_set).values('date').annotate(total=Count('date')))
+        chart_data['votes'] = list(self.get_date_range_and_annotate(self.object.vote_set).values('date', 'count').annotate(total=Sum('count')).values('date', 'total'))
+
+        context['chart_data'] = json.dumps(chart_data)
 
         context['date_range_form'] = self.form
 

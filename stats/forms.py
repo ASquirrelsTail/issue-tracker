@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 
 
 class DateRangeForm(forms.Form):
-    DEFAULT_START = timezone.now().date() - timedelta(days=7)
+    DEFAULT_START = ''  # timezone.now().date() - timedelta(days=7)
     DEFAULT_END = timezone.now().date()
     start_date = forms.DateField(required=False)
     end_date = forms.DateField(required=False)
