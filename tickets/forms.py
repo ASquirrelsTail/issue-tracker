@@ -40,10 +40,11 @@ class TicketForm(forms.ModelForm):
     '''
     class Meta:
         model = Ticket
-        fields = ['title', 'ticket_type', 'content']
+        fields = ['title', 'ticket_type', 'content', 'image']
         labels = {
             'title': ('Title'),
             'content': ('Description'),
+            'image': ('Image Attachment'),
         }
         widgets = {
             'ticket_type': forms.HiddenInput(),
@@ -60,6 +61,7 @@ class BugForm(TicketForm):
         help_texts = {
             'title': ('The name or a brief description of the bug.'),
             'content': ('Explain the bug, include any error codes and hardware details if relevant.'),
+            'image': ('Attach an image to help illustrate the bug.'),
         }
 
 
@@ -73,6 +75,7 @@ class FeatureForm(TicketForm):
         help_texts = {
             'title': ('The name or a brief description of your suggested feature.'),
             'content': ('Explain your idea for a new feature.'),
+            'image': ('Attach an image to help illustrate your idea.'),
         }
 
 

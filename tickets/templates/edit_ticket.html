@@ -3,7 +3,7 @@
 {% block title %}Edit {{ object.noun }}{% endblock %}
 {% block content %}
 <h1>Edit {{ object.noun }}</h1>
-<form method="post" action="{% url 'edit-ticket' pk=object.id %}">
+<form method="post" action="{% url 'edit-ticket' pk=object.id %}" enctype="multipart/form-data">
     {% csrf_token %}
     {% bootstrap_form form %}
     {% buttons %}

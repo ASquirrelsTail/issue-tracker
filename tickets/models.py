@@ -23,6 +23,7 @@ class Ticket(models.Model):
     approved = models.DateTimeField(null=True, default=None)
     doing = models.DateTimeField(null=True, default=None)
     done = models.DateTimeField(null=True, default=None)
+    image = models.ImageField(null=True, blank=True)
 
     class Meta:
         permissions = (('can_update_status', 'Update Ticket status.'),

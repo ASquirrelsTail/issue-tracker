@@ -3,7 +3,7 @@
 {% block title %}Report Bug{% endblock %}
 {% block content %}
 <h1>Report Bug</h1>
-<form method="post" action="{% url 'add-bug' %}">
+<form method="post" action="{% url 'add-bug' %}" enctype="multipart/form-data">
     {% csrf_token %}
     {% bootstrap_form form %}
     {% buttons %}
