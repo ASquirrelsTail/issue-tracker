@@ -15,8 +15,8 @@ class Label(models.Model):
     def __str__(self):
         return self.name
 
-    def as_tuple(self):
-        return (self.id, self.name)
+    def get_absolute_url(self):
+        return '{}?labels={}'.format(reverse('tickets-list'), self.id)
 
 
 class Ticket(models.Model):

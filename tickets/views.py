@@ -65,6 +65,12 @@ class TicketsListView(ListView):
                 elif filters['status'] == 'done':
                     queryset = queryset.exclude(done=None)
 
+            if filters['labels']:
+                for label in filters['labels']:
+                    queryset = queryset.filter(labels__in=[label])
+
+                print(queryset)
+
             if filters['order_by']:
                 if filters['order_by'] != 'created':
                     queryset = queryset.annotate(views=Count('pageview'), votes=Sum('vote__count'), comment_count=Count('comment'))
@@ -78,7 +84,10 @@ class TicketsListView(ListView):
         # Build query string for pagination
         queries = []
         for key, value in self.form.cleaned_data.items():
-            if value != '':
+            if key == 'labels':  # If the query is labels, add the ids to the query list individually, else add the key and value verbatim
+                for label_id in value.values_list('id', flat=True):
+                    queries.append(key + '=' + str(label_id))
+            elif value != '':
                 queries.append(key + '=' + value)
         queries.append('page=')
         context['query_string'] = '?' + '&'.join(queries)
