@@ -1,7 +1,7 @@
 from django.views.generic.base import TemplateView, ContextMixin
 from django.views.generic import DetailView
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db.models import Avg, Sum, Count, TextField, DateField
+from django.db.models import Avg, Sum, Count, TextField, DateField, DurationField, F
 from django.db.models.functions import Cast, TruncDay
 from django.utils import timezone
 from datetime import timedelta
@@ -42,6 +42,60 @@ def annotate_date(queryset, status, field_name='date'):
     return queryset.annotate(**annotation)
 
 
+def avg_time_taken(queryset, start_status, end_status):
+    '''
+    Returns a timedelta of the avg time taken between two statuses in a given queryset.
+    '''
+    return queryset.exclude(**{end_status: None}).annotate(time_taken=F(end_status) - F(start_status)).aggregate(Avg('time_taken'))['time_taken__avg']
+
+
+def interval_string(interval):
+    '''
+    Converts a timedelta interval to a string of years, months, weeks, days, hours, minutes.
+    '''
+    seconds_in_year = timedelta(days=365).total_seconds()
+    seconds_in_month = timedelta(days=30).total_seconds()
+    seconds_in_week = timedelta(days=7).total_seconds()
+    seconds_in_day = timedelta(days=1).total_seconds()
+    seconds_in_hour = timedelta(hours=1).total_seconds()
+    seconds_in_minute = timedelta(minutes=1).total_seconds()
+
+    seconds = interval.total_seconds()
+    result = ''
+    if seconds >= seconds_in_year:
+        years = seconds // seconds_in_year
+        seconds %= seconds_in_year
+        result += '{:.0f} year{} '.format(years, 's' if years > 1 else '')
+
+    if seconds >= seconds_in_month:
+        months = seconds // seconds_in_month
+        seconds %= seconds_in_month
+        result += '{:.0f} month{} '.format(months, 's' if months > 1 else '')
+
+    if seconds >= seconds_in_week:
+        weeks = seconds // seconds_in_week
+        seconds %= seconds_in_week
+        result += '{:.0f} week{} '.format(weeks, 's' if weeks > 1 else '')
+
+    if seconds >= seconds_in_day:
+        days = seconds // seconds_in_day
+        seconds %= seconds_in_day
+        result += '{:.0f} day{} '.format(days, 's' if days > 1 else '')
+
+    if seconds >= seconds_in_hour:
+        hours = seconds // seconds_in_hour
+        seconds %= seconds_in_hour
+        result += '{:.0f} hour{} '.format(hours, 's' if hours > 1 else '')
+
+    if seconds >= seconds_in_minute:
+        minutes = seconds // seconds_in_minute
+        seconds %= seconds_in_minute
+        print(minutes)
+        result += '{:.0f} minute{} '.format(minutes, 's' if minutes > 1 else '')
+
+    return result
+
+
 class IndexView(TemplateView, ContextMixin):
     '''
     View for index page.
@@ -52,10 +106,9 @@ class IndexView(TemplateView, ContextMixin):
         context = super(IndexView, self).get_context_data()
         context['bugs_this_week'] = last_x_days(Ticket.objects.filter(ticket_type='Bug'), 'done', 7).count()
         context['features_coming_soon'] = Ticket.objects.exclude(doing=None).filter(ticket_type='Feature', done=None).count()
-        # avg_bug_creation = Ticket.objects.exclude(done=None).aggregate(Avg('created'))['created_avg']
-        # avg_bug_completion = Ticket.objects.exclude(done=None).aggregate(Avg('done'))['done_avg']
-        # avg_bug_time_taken = avg_bug_completion - avg_bug_creation
-        # context['avg_time_to_bugfix'] = str(avg_bug_time_taken)
+        avg_time_to_bugfix = avg_time_taken(Ticket.objects.all(), 'created', 'done')
+        print(avg_time_to_bugfix)
+        context['avg_time_to_bugfix'] = interval_string(avg_time_to_bugfix)
         try:
             context['most_requested_feature_url'] = Ticket.objects.exclude(approved=None, done=None).annotate(votes=Sum('vote__count')).order_by('votes')[0].get_absolute_url()
         except (IndexError, Ticket.DoesNotExist):
