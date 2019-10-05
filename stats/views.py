@@ -6,6 +6,7 @@ from django.db.models.functions import Cast, TruncDay
 from django.utils import timezone
 from datetime import timedelta
 import json
+from collections import OrderedDict
 from tickets.models import Ticket, Pageview, Vote, Comment
 from tickets.views import AuthorOrAdminMixin
 from stats.forms import DateRangeForm
@@ -53,45 +54,23 @@ def interval_string(interval):
     '''
     Converts a timedelta interval to a string of years, months, weeks, days, hours, minutes.
     '''
-    seconds_in_year = timedelta(days=365).total_seconds()
-    seconds_in_month = timedelta(days=30).total_seconds()
-    seconds_in_week = timedelta(days=7).total_seconds()
-    seconds_in_day = timedelta(days=1).total_seconds()
-    seconds_in_hour = timedelta(hours=1).total_seconds()
-    seconds_in_minute = timedelta(minutes=1).total_seconds()
+    intervals = (
+        ('year', timedelta(days=365).total_seconds()),
+        ('month', timedelta(days=30).total_seconds()),
+        ('week', timedelta(days=7).total_seconds()),
+        ('day', timedelta(days=1).total_seconds()),
+        ('hour', timedelta(hours=1).total_seconds()),
+        ('minute', timedelta(minutes=1).total_seconds()),
+    )
 
     seconds = interval.total_seconds()
     result = ''
-    if seconds >= seconds_in_year:
-        years = seconds // seconds_in_year
-        seconds %= seconds_in_year
-        result += '{:.0f} year{} '.format(years, 's' if years > 1 else '')
 
-    if seconds >= seconds_in_month:
-        months = seconds // seconds_in_month
-        seconds %= seconds_in_month
-        result += '{:.0f} month{} '.format(months, 's' if months > 1 else '')
-
-    if seconds >= seconds_in_week:
-        weeks = seconds // seconds_in_week
-        seconds %= seconds_in_week
-        result += '{:.0f} week{} '.format(weeks, 's' if weeks > 1 else '')
-
-    if seconds >= seconds_in_day:
-        days = seconds // seconds_in_day
-        seconds %= seconds_in_day
-        result += '{:.0f} day{} '.format(days, 's' if days > 1 else '')
-
-    if seconds >= seconds_in_hour:
-        hours = seconds // seconds_in_hour
-        seconds %= seconds_in_hour
-        result += '{:.0f} hour{} '.format(hours, 's' if hours > 1 else '')
-
-    if seconds >= seconds_in_minute:
-        minutes = seconds // seconds_in_minute
-        seconds %= seconds_in_minute
-        print(minutes)
-        result += '{:.0f} minute{} '.format(minutes, 's' if minutes > 1 else '')
+    for interval_name, interval_seconds in intervals:
+        if seconds >= interval_seconds:
+            count = seconds // interval_seconds
+            seconds %= interval_seconds
+            result += '{:.0f} {}{} '.format(count, interval_name, 's' if count > 1 else '')
 
     return result
 
