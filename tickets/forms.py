@@ -1,10 +1,11 @@
 from django import forms
-from tickets.models import Ticket, Comment
+from tickets.models import Ticket, Comment, Label
 
 
-# class LabelForm(forms.ModelForm):
-#     class Meta:
-#         model = Label
+class LabelForm(forms.ModelForm):
+    class Meta:
+        model = Label
+        fields = ['name']
 
 
 class FilterForm(forms.Form):

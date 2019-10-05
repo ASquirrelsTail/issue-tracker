@@ -9,8 +9,8 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 from django.db.models import Q, Count, Sum
 from django.http import HttpResponseBadRequest
-from tickets.models import Ticket, Comment, Pageview
-from tickets.forms import CommentForm, TicketForm, FeatureForm, BugForm, VoteForm, FilterForm
+from tickets.models import Ticket, Comment, Pageview, Label
+from tickets.forms import CommentForm, TicketForm, FeatureForm, BugForm, VoteForm, FilterForm, LabelForm
 
 
 # MIXINS #
@@ -304,3 +304,56 @@ class EditCommentView(AuthorOrAdminMixin, UpdateView):
     def form_valid(self, form):
         form.instance.edited = timezone.now()
         return super(EditCommentView, self).form_valid(form)
+
+# LABEL VIEWS #
+
+
+class LabelPermissions(PermissionRequiredMixin):
+    '''
+    Permissions to create, edit and delete labels.
+    '''
+    permission_required = 'tickets.can_create_edit_delete_labels'
+    raise_exception = True
+
+
+class LabelListView(LabelPermissions, ListView):
+    '''
+    View to show a list of labels to add, edit and update.
+    '''
+    queryset = Label.objects.all()
+    template_name = 'label_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(LabelListView, self).get_context_data(**kwargs)
+        context['label_form'] = LabelForm()
+
+        return context
+
+
+class AddLabelView(LabelPermissions, CreateView):
+    '''
+    View to create labels for tickets. Requires create_edit_delete_labels permission.
+    '''
+    model = Label
+    form_class = LabelForm
+    template_name = 'add_label.html'
+    success_url = reverse_lazy('labels')
+
+
+class EditLabelView(LabelPermissions, UpdateView):
+    '''
+    View to create labels for tickets. Requires create_edit_delete_labels permission.
+    '''
+    model = Label
+    form_class = LabelForm
+    template_name = 'edit_label.html'
+    success_url = reverse_lazy('labels')
+
+
+class DeleteLabelView(LabelPermissions, DeleteView):
+    '''
+    View to create labels for tickets. Requires create_edit_delete_labels permission.
+    '''
+    model = Label
+    template_name = 'delete_label.html'
+    success_url = reverse_lazy('labels')

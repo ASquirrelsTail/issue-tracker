@@ -5,7 +5,18 @@ from django.db.models import Sum
 from django.utils import timezone
 from credits.models import Wallet
 
-# Create your models here.
+
+class Label(models.Model):
+    name = models.CharField(max_length=30, unique=True)
+
+    class Meta:
+        permissions = (('can_create_edit_delete_labels', 'Create, edit and delete labels.'),)
+
+    def __str__(self):
+        return self.name
+
+    def as_tuple(self):
+        return (self.id, self.name)
 
 
 class Ticket(models.Model):
@@ -24,6 +35,7 @@ class Ticket(models.Model):
     doing = models.DateTimeField(null=True, default=None)
     done = models.DateTimeField(null=True, default=None)
     image = models.ImageField(null=True, blank=True)
+    labels = models.ManyToManyField(Label)
 
     class Meta:
         permissions = (('can_update_status', 'Update Ticket status.'),
@@ -120,13 +132,6 @@ class Ticket(models.Model):
             return status
         else:
             return False
-
-
-class Label(models.Model):
-    name = models.CharField(max_length=30)
-
-    def __str__(self):
-        return self.name
 
 
 class Pageview(models.Model):
