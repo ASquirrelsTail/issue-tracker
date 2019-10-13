@@ -18,7 +18,7 @@ urlpatterns = [
     url(r'^(?P<ticket_pk>[0-9]+)/comments/(?P<comment_pk>[0-9]+)/reply/$', AddCommentView.as_view(), name='add-reply'),
     url(r'^(?P<ticket_pk>[0-9]+)/comments/(?P<pk>[0-9]+)/edit/$', EditCommentView.as_view(), name='edit-comment'),
     url(r'^labels/$', LabelListView.as_view(), name='labels'),
-    url(r'^labels/add$', AddLabelView.as_view(), name='add-label'),
+    url(r'^labels/add/$', AddLabelView.as_view(), name='add-label'),
     url(r'^labels/(?P<pk>[0-9]+)/edit/$', EditLabelView.as_view(), name='edit-label'),
     url(r'^labels/(?P<pk>[0-9]+)/delete/$', DeleteLabelView.as_view(), name='delete-label'),
 ]

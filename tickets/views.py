@@ -69,8 +69,6 @@ class TicketsListView(ListView):
                 for label in filters['labels']:
                     queryset = queryset.filter(labels__in=[label])
 
-                print(queryset)
-
             if filters['order_by']:
                 if filters['order_by'] != 'created':
                     queryset = queryset.annotate(views=Count('pageview'), votes=Sum('vote__count'), comment_count=Count('comment'))

@@ -6,8 +6,8 @@ from django.shortcuts import reverse
 from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta
-from tickets.models import Ticket, Comment, Vote, Pageview
-from tickets.forms import CommentForm, TicketForm, BugForm, FeatureForm, VoteForm, FilterForm
+from tickets.models import Ticket, Comment, Vote, Pageview, Label
+from tickets.forms import CommentForm, TicketForm, BugForm, FeatureForm, VoteForm, FilterForm, LabelForm
 from tickets.views import AddTicketView
 
 
@@ -349,16 +349,27 @@ class TicketListViewTestCase(TicketsTestCase):
         '''
         super(TicketListViewTestCase, cls).setUpTestData()
 
+        cls.label_1 = Label(name='Test Label 1')
+        cls.label_1.save()
+        cls.label_2 = Label(name='Test Label 2')
+        cls.label_2.save()
+
         def create_test_tickets(count, user, ticket_type, status=None):
             '''
             Helper function to set up a list of tickets with the required ticket type and status.
-            Adds comments, votes and pageviews, and muddles the timestamps up a bit.
+            Adds labels, comments, votes and pageviews, and muddles the timestamps up a bit.
             '''
             delay = timedelta(hours=1)
 
             for n in range(count):
+                labels = []
+                if n % 2 == 0:
+                    labels.append(cls.label_1)
+                if n % 3 == 0:
+                    labels.append(cls.label_2)
                 ticket = Ticket(user=user, title='Test title', ticket_type=ticket_type, content='Test content')
                 ticket.save()
+                ticket.labels = labels
                 ticket.created = timezone.now() - (delay * 2 * n)
                 ticket.save()
                 if status:
@@ -468,6 +479,24 @@ class TicketListViewTestCase(TicketsTestCase):
         self.client.login(username='AdminUser', password='tH1$isA7357')
         response = self.client.get('/tickets/?status=awaiting')
         self.assertQuerysetEqual(response.context['object_list'], Ticket.objects.filter(approved=None)[:10],
+                                 transform=lambda x: x)
+
+    def test_get_tickets_list_filters_by_label(self):
+        '''
+        Filtering by a particular label should include only a list of tickets with that label.
+        '''
+        response = self.client.get('/tickets/?labels=1')
+        self.assertQuerysetEqual(response.context['object_list'],
+                                 Ticket.objects.exclude(approved=None).filter(labels__in=[self.label_1])[:10],
+                                 transform=lambda x: x)
+
+    def test_get_tickets_list_filters_by_multiple_labels(self):
+        '''
+        Filtering by multiple labels should include only a list of tickets with all labels.
+        '''
+        response = self.client.get('/tickets/?labels=1&labels=2')
+        self.assertQuerysetEqual(response.context['object_list'],
+                                 Ticket.objects.exclude(approved=None).filter(labels__in=[self.label_1]).filter(labels__in=[self.label_2])[:10],
                                  transform=lambda x: x)
 
     def test_get_tickets_list_order_by_oldest(self):
@@ -594,6 +623,208 @@ class TicketListViewTestCase(TicketsTestCase):
 
         response = self.client.get('/tickets/?order_by=-votes&status=approved&ticket_type=Bug')
         self.assertEqual('?order_by=-votes&status=approved&ticket_type=Bug&page=', response.context['query_string'])
+
+
+class LabelViewsTestCase(TestCase):
+    '''
+    Class to test label views.
+    '''
+    @classmethod
+    def setUpTestData(cls):
+        cls.test_user = User.objects.create_user(username='TestUser', email='test@test.com',
+                                                 password='tH1$isA7357')
+        cls.test_user.save()
+
+        cls.admin_user = User.objects.create_user(username='AdminUser', email='admin@test.com',
+                                                  password='tH1$isA7357')
+        cls.admin_user.save()
+
+        cls.admin_user.user_permissions.set(Permission.objects.all())
+
+        label_1 = Label(name='Label 1')
+        label_1.save()
+
+        label_2 = Label(name='Label 2')
+        label_2.save()
+
+        label_3 = Label(name='Label 3')
+        label_3.save()
+
+    def setUp(self):
+        self.client.logout()
+
+    def test_get_label_list_view(self):
+        '''
+        The labels route should return 403 forbidden for users without permissions,
+        and render the label_list.html template for permitted users.
+        '''
+        response = self.client.get('/tickets/labels/')
+        self.assertEqual(response.status_code, 403)
+
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/labels/')
+        self.assertEqual(response.status_code, 403)
+
+        self.client.logout()
+
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/labels/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'label_list.html')
+
+    def test_get_label_list_includes_form(self):
+        '''
+        The label list route should include the new label form.
+        '''
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/labels/')
+        self.assertIsInstance(response.context['label_form'], LabelForm)
+
+    def test_get_label_list_includes_labels(self):
+        '''
+        The label list route should include a list of all labels.
+        '''
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/labels/')
+        self.assertQuerysetEqual(response.context['object_list'], Label.objects.all(), ordered=False, transform=lambda x: x)
+
+    def test_get_add_label_view(self):
+        '''
+        The add label route should return 403 forbidden for users without permissions,
+        and render the add_label.html template using the LabelForm form for permitted users.
+        '''
+        response = self.client.get('/tickets/labels/add/')
+        self.assertEqual(response.status_code, 403)
+
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/labels/add/')
+        self.assertEqual(response.status_code, 403)
+
+        self.client.logout()
+
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/labels/add/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'add_label.html')
+        self.assertIsInstance(response.context['form'], LabelForm)
+
+    def test_post_add_label_creates_label_if_admin(self):
+        '''
+        The add label route should create a new label on post for users with permission to do so.
+        '''
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        self.client.post('/tickets/labels/add/', {'name': 'New Label'})
+        self.assertTrue(Label.objects.get(name='New Label'))
+
+    def test_post_add_label_does_not_create_label_for_user_lacking_permissions(self):
+        '''
+        The add label route should not create a label on post for users without permission to do so.
+        '''
+        self.client.post('/tickets/labels/add/', {'name': 'Forbidden Label'})
+        with self.assertRaises(Label.DoesNotExist):
+            Label.objects.get(name='Forbidden Label')
+
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        self.client.post('/tickets/labels/add/', {'name': 'Forbidden Label'})
+        with self.assertRaises(Label.DoesNotExist):
+            Label.objects.get(name='Forbidden Label')
+
+    def test_post_add_label_does_not_create_duplicate_labels(self):
+        '''
+        The add label route should not create a new label if one with the same name already exists.
+        '''
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        label = Label(name='Unique Label')
+        label.save()
+        self.client.post('/tickets/labels/add/', {'name': 'Unique Label'})
+        self.assertEqual(Label.objects.filter(name='Unique Label').count(), 1)
+
+    def test_get_edit_label_view(self):
+        '''
+        The edit label route should return 403 forbidden for users without permissions,
+        and render the edit_label.html template using the LabelForm form for permitted users.
+        '''
+        response = self.client.get('/tickets/labels/1/edit/')
+        self.assertEqual(response.status_code, 403)
+
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/labels/1/edit/')
+        self.assertEqual(response.status_code, 403)
+
+        self.client.logout()
+
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/labels/1/edit/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'edit_label.html')
+        self.assertIsInstance(response.context['form'], LabelForm)
+
+    def test_post_edit_label_view(self):
+        '''
+        Post requests to edit label should allow logged in users to hange the name of a label.
+        '''
+        label = Label(name='Old Label')
+        label.save()
+
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        self.client.post('/tickets/labels/{}/edit/'.format(label.id), {'name': 'Updated Label'})
+        with self.assertRaises(Label.DoesNotExist):
+            Label.objects.get(name='Updated Label')
+
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        self.client.post('/tickets/labels/{}/edit/'.format(label.id), {'name': 'Updated Label'})
+        self.assertTrue(Label.objects.get(name='Updated Label'))
+
+    def test_posed_edit_label_does_not_create_duplicate_label(self):
+        '''
+        Editing a label fails if it now has the same name as an existing label.
+        '''
+        unique_label = Label(name='Unique Old Label')
+        unique_label.save()
+        label = Label(name='Label To Edit')
+        label.save()
+
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        self.client.post('/tickets/labels/{}/edit/'.format(label.id), {'name': 'Unique Old Label'})
+        self.assertEqual(Label.objects.filter(name='Unique Old Label').count(), 1)
+        self.assertTrue(Label.objects.get(name='Label To Edit'))
+
+    def test_get_delete_label_view(self):
+        '''
+        The delete label route should return 403 forbidden for users without permissions,
+        and render the delete_label.html template for permitted users.
+        '''
+        response = self.client.get('/tickets/labels/1/delete/')
+        self.assertEqual(response.status_code, 403)
+
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/labels/1/delete/')
+        self.assertEqual(response.status_code, 403)
+
+        self.client.logout()
+
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/labels/1/delete/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'delete_label.html')
+
+    def test_post_delete_label_deletes_label_for_admin(self):
+        '''
+        Post requests to the delete label route should delete the label if the user has permission.
+        '''
+        label = Label(name='Delete This Label')
+        label.save()
+
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        self.client.post('/tickets/labels/{}/delete/'.format(label.id))
+        self.assertTrue(Label.objects.get(name='Delete This Label'))
+
+        self.client.logout()
+
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        self.client.post('/tickets/labels/{}/delete/'.format(label.id))
+        with self.assertRaises(Label.DoesNotExist):
+            Label.objects.get(name='Delete This Label')
 
 
 class CommentViewsTestCase(TestCase):
