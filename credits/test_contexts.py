@@ -23,7 +23,7 @@ class WalletContextTestCase(TestCase):
         '''
         Anonymous users have no wallet balance.
         '''
-        response = self.client.get('/')
+        response = self.client.get('/tickets/')
         self.assertIsNone(response.context.get('wallet_balance'))
 
     def test_authenticated_user_returns_wallet_balance(self):
@@ -32,11 +32,11 @@ class WalletContextTestCase(TestCase):
         '''
         self.client.login(username='TestContextUser', password='tH1$isA7357')
 
-        response = self.client.get('/')
+        response = self.client.get('/tickets/')
         self.assertEqual(response.context.get('wallet_balance'), 0)
 
         self.test_user.wallet.credit(10)
-        response = self.client.get('/')
+        response = self.client.get('/tickets/')
         self.assertEqual(response.context.get('wallet_balance'), 10)
 
     def test_admin_user_returns_wallet_balance_none(self):
@@ -51,7 +51,7 @@ class WalletContextTestCase(TestCase):
 
         self.client.login(username='admin_user', password='tH1$isA7357')
 
-        response = self.client.get('/')
+        response = self.client.get('/tickets/')
         self.assertIsNone(response.context.get('wallet_balance'))
 
     def test_user_has_no_wallet_wallet_balance_is_zero(self):
@@ -64,5 +64,5 @@ class WalletContextTestCase(TestCase):
 
         self.client.login(username='NoWalletUser', password='tH1$isA7357')
 
-        response = self.client.get('/')
+        response = self.client.get('/tickets/')
         self.assertEqual(response.context.get('wallet_balance'), 0)

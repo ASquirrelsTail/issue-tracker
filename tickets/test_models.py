@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
-from tickets.models import Ticket, Comment, Vote
+from tickets.models import Ticket, Comment, Vote, Label
 from credits.models import Wallet
 
 
@@ -481,3 +481,14 @@ class CommentModelTestCase(TestCase):
 
         comment2 = Comment.objects.get(id=self.comment2.id)
         self.assertEqual(comment2.no_replies, 1)
+
+
+class LabelModelTestCase(TestCase):
+    '''
+    Class to test Label model.
+    '''
+    def test_label_absolute_url(self):
+        label = Label(name='TestLabel')
+        label.save()
+
+        self.assertEqual(label.get_absolute_url(), '/tickets/?labels=1')

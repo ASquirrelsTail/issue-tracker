@@ -21,7 +21,7 @@ class LoginModalContextTestCase(TestCase):
         '''
         The login form should be provided to template contexts for use in the login modal.
         '''
-        response = self.client.get('/')
+        response = self.client.get('/tickets/')
         self.assertIsInstance(response.context['login_form'], AuthenticationForm)
 
     def test_login_modal_form_not_provided_for_authenticated_user(self):
@@ -30,7 +30,7 @@ class LoginModalContextTestCase(TestCase):
         '''
         self.client.login(username='TestContextUser', password='tH1$isA7357')
 
-        response = self.client.get('/')
+        response = self.client.get('/tickets/')
         self.assertFalse(response.context['login_form'])
 
     def test_login_modal_form_not_provided_on_login_page(self):
@@ -44,8 +44,8 @@ class LoginModalContextTestCase(TestCase):
         '''
         The login modal next value should pass the current path.
         '''
-        response = self.client.get('/')
-        self.assertEqual(response.context['login_next'], '/')
+        response = self.client.get('/tickets/')
+        self.assertEqual(response.context['login_next'], '/tickets/')
 
     def test_login_modal_next_ignors_account_paths(self):
         '''

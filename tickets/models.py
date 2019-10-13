@@ -35,7 +35,7 @@ class Ticket(models.Model):
     doing = models.DateTimeField(null=True, default=None)
     done = models.DateTimeField(null=True, default=None)
     image = models.ImageField(null=True, blank=True)
-    labels = models.ManyToManyField(Label)
+    labels = models.ManyToManyField(Label, blank=True)
 
     class Meta:
         permissions = (('can_update_status', 'Update Ticket status.'),

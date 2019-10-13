@@ -81,11 +81,12 @@ class RegistrationViewsTestCase(TestCase):
         response = self.client.post('/account/sign-up/',
                                     {'username': 'SuccessfulUser', 'email': 'successfuluser@test.com',
                                      'password1': 'tH1$isA7357', 'password2': 'tH1$isA7357'},
-                                    follow=True)
+                                    follow=False)
 
         user = auth.get_user(self.client)
         self.assertTrue(user.is_authenticated)
-        self.assertIn(('/', 302), response.redirect_chain)
+        self.assertEqual(302, response.status_code)
+        self.assertEqual('/', response.url)
 
     def test_post_sign_up_page_returns_sign_up_page_on_failure(self):
         '''
