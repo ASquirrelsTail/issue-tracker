@@ -4,8 +4,9 @@
 {% block content %}
 {% if transaction is not None %}
     {% if transaction.can_refund %}
-        <h1>Refund {{ transaction.amount }} credits for £{{ refund_amount }}</h1>
-        <form action="POST">
+        <h1>Refund {{ transaction.amount }} credits for {{ refund_value }}</h1>
+        <form method="POST">
+            {% csrf_token %}
             {% buttons %}
             <button type="submit" class="btn btn-primary">Request Refund</button>
             {% endbuttons %}

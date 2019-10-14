@@ -58,14 +58,15 @@ class Credit(Transaction):
 
     @property
     def can_refund(self):
-        return self.wallet.balance >= self.ammount
+        return self.wallet.balance >= self.amount
 
     def refund(self):
         if self.can_refund:
             try:
                 refund = stripe.Refund.create(charge=self.stripe_transaction_id)
-                self.wallet.debit(self.ammount)
+                self.wallet.debit(self.amount)
                 self.refunded = True
+                self.save()
                 return (refund['status'], refund['amount'])
             except stripe.error.StripeError:
                 return (False, 0)

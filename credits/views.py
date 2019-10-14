@@ -47,7 +47,7 @@ class GetCreditsView(HasWalletMixin, FormView):
 
     def form_valid(self, form):
         '''
-        Once the user chooses an ammount, a payment intent is created, and the payment page with the Stripe.js API is returned.
+        Once the user chooses an amount, a payment intent is created, and the payment page with the Stripe.js API is returned.
         Overrides success url redirect.
         '''
         no_credits = form.cleaned_data['no_credits']
@@ -81,13 +81,17 @@ class RefundView(HasWalletMixin, SingleObjectMixin, TemplateView, View):
     def get_context_data(self, **kwargs):
         self.get_object()
         context = super(RefundView, self).get_context_data(**kwargs)
-        context['refund_value'] = '{:.2f}'.format(self.object.real_value / 100)
+        if self.object:
+            context['refund_value'] = '£{:.2f}'.format(self.object.real_value / 100)
+
+        return context
 
     def post(self, request):
+        self.get_object()
         if self.object and self.object.can_refund:
             success, amount = self.object.refund()
             if success:
-                messages.success('Successfully refunded {:.2f}'.format(amount / 100))
+                messages.success(self.request, 'Successfully refunded £{:.2f}'.format(amount / 100))
             return redirect(reverse_lazy('wallet'))
         else:
             return self.get(request)
