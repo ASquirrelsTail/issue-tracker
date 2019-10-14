@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load bootstrap4 %}
+{% block title %}Refund last transaction{% endblock %}
+{% block content %}
+{% if transaction is not None %}
+    {% if transaction.can_refund %}
+        <h1>Refund {{ transaction.amount }} credits for £{{ refund_amount }}</h1>
+        <form action="POST">
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Request Refund</button>
+            {% endbuttons %}
+        </form>
+    {% else %}
+        <h1>Insufficient credits to refund last transaction</h1>
+        <p>You have spent some or all of the credits purchased in your last transaction, and are no longer eligible for a refund.</p>
+    {% endif %}
+{% else %}
+    <h1>No transactions to refund</h1>
+    <p>There are no recent transactions to refund.</p>
+{% endif %}
+{% endblock %}

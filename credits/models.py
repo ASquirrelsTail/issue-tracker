@@ -53,7 +53,24 @@ class Transaction(models.Model):
 
 class Credit(Transaction):
     real_value = models.IntegerField(default=0)
+    refunded = models.BooleanField(default=False)
     stripe_transaction_id = models.CharField(max_length=50, null=True, default=None)
+
+    @property
+    def can_refund(self):
+        return self.wallet.balance >= self.ammount
+
+    def refund(self):
+        if self.can_refund:
+            try:
+                refund = stripe.Refund.create(charge=self.stripe_transaction_id)
+                self.wallet.debit(self.ammount)
+                self.refunded = True
+                return (refund['status'], refund['amount'])
+            except stripe.error.StripeError:
+                return (False, 0)
+        else:
+            return (False, 0)
 
 
 class Debit(Transaction):

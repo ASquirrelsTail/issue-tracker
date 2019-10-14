@@ -2,7 +2,8 @@ from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
@@ -11,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 import json
 from credits.forms import GetCreditsForm
-from credits.models import PaymentIntent
+from credits.models import PaymentIntent, Credit
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET
@@ -56,6 +57,40 @@ class GetCreditsView(HasWalletMixin, FormView):
         return render(self.request, 'get_credits_pay.html',
                       {'client_secret': intent.client_secret, 'stripe_publishable': settings.STRIPE_PUBLISHABLE,
                        'charge': '{:.2f}'.format(charge / 100), 'no_credits': no_credits, 'intent_db_id': intent.id})
+
+
+class RefundView(HasWalletMixin, SingleObjectMixin, TemplateView, View):
+    '''
+    View to refund a users latest transaction, if they have at least that many credits remaining.
+    '''
+    template_name = 'refund.html'
+    http_method_names = ['get', 'post']
+    context_object_name = 'transaction'
+
+    def get_object(self, queryset=None):
+        '''
+        Gets the most recent unrefunded transaction.
+        '''
+        try:
+            self.object = self.request.user.wallet.credit_set.filter(refunded=False).order_by('-created')[0]
+        except Credit.DoesNotExist:
+            self.object = None
+
+        return self.object
+
+    def get_context_data(self, **kwargs):
+        self.get_object()
+        context = super(RefundView, self).get_context_data(**kwargs)
+        context['refund_value'] = '{:.2f}'.format(self.object.real_value / 100)
+
+    def post(self, request):
+        if self.object and self.object.can_refund:
+            success, amount = self.object.refund()
+            if success:
+                messages.success('Successfully refunded {:.2f}'.format(amount / 100))
+            return redirect(reverse_lazy('wallet'))
+        else:
+            return self.get(request)
 
 
 class CheckIntentView(LoginRequiredMixin, SingleObjectMixin, View):
