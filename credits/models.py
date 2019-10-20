@@ -13,7 +13,8 @@ class Wallet(models.Model):
     balance = models.IntegerField(default=0)
 
     class Meta:
-        permissions = (('cant_have_wallet', 'User can\'t have a wallet.'),)
+        permissions = (('cant_have_wallet', 'User can\'t have a wallet.'),
+                       ('can_view_transactions_stats', 'User can view all transaction stats'))
 
     def __str__(self):
         return '{}\'s wallet'.format(self.user.username)
@@ -28,13 +29,13 @@ class Wallet(models.Model):
         self.save()
         return self.balance
 
-    def debit(self, amount=0):
+    def debit(self, amount=0, real_value=0):
         '''
         Debits an amount from the users wallet.
         '''
         if self.balance >= amount:
             self.balance -= amount
-            transaction = Debit.objects.create(wallet=self, amount=amount)
+            transaction = Debit.objects.create(wallet=self, amount=amount, real_value=real_value)
             transaction.save()
             self.save()
             return transaction
@@ -46,25 +47,25 @@ class Transaction(models.Model):
     wallet = models.ForeignKey(Wallet)
     created = models.DateTimeField(auto_now_add=True)
     amount = models.IntegerField(default=0)
+    real_value = models.IntegerField(default=0)
 
     class Meta:
         abstract = True
 
 
 class Credit(Transaction):
-    real_value = models.IntegerField(default=0)
     refunded = models.BooleanField(default=False)
     stripe_transaction_id = models.CharField(max_length=50, null=True, default=None)
 
     @property
     def can_refund(self):
-        return self.wallet.balance >= self.amount
+        return self.wallet.balance >= self.amount and self.stripe_transaction_id is not None
 
     def refund(self):
         if self.can_refund:
             try:
                 refund = stripe.Refund.create(charge=self.stripe_transaction_id)
-                self.wallet.debit(self.amount)
+                self.wallet.debit(self.amount, refund['amount'])
                 self.refunded = True
                 self.save()
                 return (refund['status'], refund['amount'])

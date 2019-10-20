@@ -9,6 +9,7 @@ import json
 from collections import OrderedDict
 from tickets.models import Ticket, Pageview, Vote, Comment
 from tickets.views import AuthorOrAdminMixin
+from credits.models import Credit, Debit
 from stats.forms import DateRangeForm
 
 
@@ -94,22 +95,37 @@ class IndexView(TemplateView, ContextMixin):
         return context
 
 
-class TicketStatsView(AuthorOrAdminMixin, DetailView):
+class DateRangeView(ContextMixin):
     '''
-    View for ticket stats, only accessible by a tickets author, or admin with the required permission.
+    Abstract view for including date range queries for stats.
     '''
-    queryset = Ticket.objects.all()
-    template_name = 'ticket_stats_detail.html'
-    permission_required = 'tickets.can_view_all_stats'
+    date_to_use = 'created'
 
     def get_form_kwargs(self):
         self.form = DateRangeForm(self.request.GET)
         self.form.is_valid()
 
     def get_date_range_and_annotate(self, queryset):
-        queryset = filter_date_range(queryset, 'created', self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
-        queryset = annotate_date(queryset, 'created')
+        queryset = filter_date_range(queryset, self.date_to_use, self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
+        queryset = annotate_date(queryset, self.date_to_use)
         return queryset
+
+    def get_context_data(self, **kwargs):
+        self.get_form_kwargs()
+        context = super(DateRangeView, self).get_context_data(**kwargs)
+        context['date_range_form'] = self.form
+
+        return context
+
+
+class TicketStatsView(AuthorOrAdminMixin, DateRangeView, DetailView):
+    '''
+    View for ticket stats, only accessible by a tickets author, or admin with the required permission.
+    '''
+    queryset = Ticket.objects.all()
+    permission_required = 'tickets.can_view_all_stats'
+    raise_exception = True
+    template_name = 'ticket_stats_detail.html'
 
     def get_context_data(self, **kwargs):
         context = super(TicketStatsView, self).get_context_data(**kwargs)
@@ -122,31 +138,16 @@ class TicketStatsView(AuthorOrAdminMixin, DetailView):
 
         context['chart_data'] = json.dumps(chart_data)
 
-        context['date_range_form'] = self.form
-
         return context
 
-    def get(self, request, pk):
-        self.get_form_kwargs()
-        return super(TicketStatsView, self).get(request, pk)
 
-
-class AllTicketStatsView(PermissionRequiredMixin, TemplateView, ContextMixin):
+class AllTicketStatsView(PermissionRequiredMixin, TemplateView, DateRangeView):
     '''
     View for displaying stats across all tickets. Only accessible to admin users.
     '''
     permission_required = 'tickets.can_view_all_stats'
     raise_exception = True
     template_name = 'ticket_stats_all.html'
-
-    def get_form_kwargs(self):
-        self.form = DateRangeForm(self.request.GET)
-        self.form.is_valid()
-
-    def get_date_range_and_annotate(self, queryset):
-        queryset = filter_date_range(queryset, 'created', self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
-        queryset = annotate_date(queryset, 'created')
-        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(AllTicketStatsView, self).get_context_data(**kwargs)
@@ -156,13 +157,27 @@ class AllTicketStatsView(PermissionRequiredMixin, TemplateView, ContextMixin):
         context['views'] = json.dumps(list(self.get_date_range_and_annotate(Pageview.objects.all()).values('date')))
         context['votes'] = json.dumps(list(self.get_date_range_and_annotate(Vote.objects.all()).values('date', 'count')))
 
-        context['date_range_form'] = self.form
-
         return context
 
-    def get(self, request):
-        self.get_form_kwargs()
-        return super(AllTicketStatsView, self).get(request)
+
+class TransactionsStatsView(PermissionRequiredMixin, TemplateView, DateRangeView):
+    '''
+    View for displaying stats across all transactions. Only accessible to admin users.
+    '''
+    permission_required = 'credits.can_view_transactions_stats'
+    raise_exception = True
+    template_name = 'transaction_stats.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(TransactionsStatsView, self).get_context_data(**kwargs)
+
+        chart_data = {}
+        chart_data['credit'] = list(self.get_date_range_and_annotate(Credit.objects.filter(real_value__gte=1)).values('date', 'real_value').annotate(total=Sum('real_value')).values('date', 'total'))
+        chart_data['debit'] = list(self.get_date_range_and_annotate(Debit.objects.filter(real_value__gte=1)).values('date', 'real_value').annotate(total=Sum('real_value')).values('date', 'total'))
+
+        context['chart_data'] = json.dumps(chart_data)
+
+        return context
 
 
 class RoadmapView(TemplateView, ContextMixin):

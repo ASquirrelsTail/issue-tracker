@@ -72,7 +72,7 @@ class RefundView(HasWalletMixin, SingleObjectMixin, TemplateView, View):
         Gets the most recent unrefunded transaction.
         '''
         try:
-            self.object = self.request.user.wallet.credit_set.filter(refunded=False).order_by('-created')[0]
+            self.object = self.request.user.wallet.credit_set.filter(refunded=False, real_value__gte=1).order_by('-created')[0]
         except Credit.DoesNotExist:
             self.object = None
 
@@ -92,6 +92,8 @@ class RefundView(HasWalletMixin, SingleObjectMixin, TemplateView, View):
             success, amount = self.object.refund()
             if success:
                 messages.success(self.request, 'Successfully refunded £{:.2f}'.format(amount / 100))
+            else:
+                messages.error(self.request, 'Failed to refund transaction.')
             return redirect(reverse_lazy('wallet'))
         else:
             return self.get(request)

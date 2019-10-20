@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 {% load bootstrap4 %}
 {% load static %}
-{% block title %}Home Page{% endblock %}
+{% block title %}All transaction stats{% endblock %}
 {% block head %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/dc.css' %}">
 {% endblock %}
 {% block content %}
-    <h1><a href="{% url 'ticket' pk=object.pk %}">{{ object }}</a></h1>
-    <p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
+    <h1>All transaction stats</h1>
     <form action="" method="GET">
         {% bootstrap_form date_range_form %}
         {% buttons %}
@@ -24,14 +23,23 @@
     <script>
         let dataset = {{ chart_data|safe }};
 
+        function makeTitle(d) {
+            return `${d.key.toDateString()}: £${d.value.total.toFixed(2)} ${d.value.type}`;
+        }
+
         $(() => {
             // Create and render the chart on page load.
-            let ndx = crossfilter(combineData(dataset));
+    
+            // Divide values by 100 to get £.
+            let ndx = crossfilter(combineData(dataset).map((record) => {
+                record.total = record.total / 100;
+                return record;
+            }));
+            // Built composite chart for credits and debits
             let chart = createCompositeChart('chart', ndx,
-                                             [{name: 'comments', color: colors.blue, title: makeTitle},
-                                              {name: 'views', color: colors.purple, title: makeTitle},
-                                              {name: 'votes', color: colors.green, title: makeTitle}]);
-            chart.yAxisLabel('Count', 25)
+                                             [{name: 'credit', color: colors.green, title: makeTitle},
+                                              {name: 'debit', color: colors.pink, title: makeTitle}]);
+            chart.yAxisLabel('£', 25);
             dc.renderAll();
         });
 
