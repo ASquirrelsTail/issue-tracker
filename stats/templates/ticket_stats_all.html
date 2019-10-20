@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load bootstrap4 %}
-{% block title %}Home Page{% endblock %}
+{% load static %}
+{% block title %}Ticket Stats{% endblock %}
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/dc.css' %}">
+{% endblock %}
 {% block content %}
     <h1>All ticket stats</h1>
     <form action="" method="GET">
@@ -9,8 +13,53 @@
         <button type="submit" class="btn btn-primary">Filter</button>
         {% endbuttons %}
     </form>
-    {{ tickets }}
-    {{ comments }}
-    {{ votes }}
-    {{ views }}
+    <div id="chart" class="col-sm-12"></div>
+    <div id="pie" class="col-sm-12"></div>
+    <div class="col-sm-12">
+        <h2><a href="{% url 'tickets-list' %}?status=awaiting">{{ awaiting_approval }} Tickets Awaiting Approval</a></h2>
+        <h3>Top 5 most requested features</h3>
+        <ul>
+        {% for feature in top_5_features %}
+            <li><a href="{{ feature.get_absolute_url }}">{{ feature }}</a></li>
+        {% endfor %}
+        </ul>
+        <h3>Top 5 most reported bugs</h3>
+        <ul>
+        {% for bug in top_5_bugs %}
+            <li><a href="{{ bug.get_absolute_url }}">{{ bug }}</a></li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
+{% block javascript %}
+    <script src="{% static 'js/libs/d3.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/libs/crossfilter.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/libs/dc.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/stats.js' %}" type="text/javascript"></script>
+    <script>
+        let dataset = {{ chart_data|safe }};
+
+        function makeTitle(d) {
+            return `${d.key.toDateString()}: ${d.value.total} ${d.value.type}`;
+        }
+
+        $(() => {
+            // Create and render the chart on page load.
+            let ndx = crossfilter(combineData(dataset));
+            let chart = createCompositeChart('chart', ndx,
+                                             [{name: 'features', color: colors.blue, title: makeTitle},
+                                              {name: 'bugs', color: colors.pink, title: makeTitle},
+                                              {name: 'comments', color: colors.green, title: makeTitle},
+                                              {name: 'views', color: colors.purple, title: makeTitle},
+                                              {name: 'votes', color: colors.orange, title: makeTitle}]);
+            chart.yAxisLabel('Count', 25)
+
+            let pie = createPieChart('pie', ndx,
+                                     [{name: 'features', color: colors.blue},
+                                      {name: 'bugs', color: colors.pink}]);
+
+            dc.renderAll();
+        });
+
+    </script>
 {% endblock %}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load bootstrap4 %}
 {% load static %}
-{% block title %}Home Page{% endblock %}
+{% block title %}Stats for #{{ object }}{% endblock %}
 {% block head %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/dc.css' %}">
 {% endblock %}
@@ -24,13 +24,17 @@
     <script>
         let dataset = {{ chart_data|safe }};
 
+        function makeTitle(d) {
+            return `${d.key.toDateString()}: ${d.value.total} ${d.value.type}`;
+        }
+
         $(() => {
             // Create and render the chart on page load.
             let ndx = crossfilter(combineData(dataset));
             let chart = createCompositeChart('chart', ndx,
                                              [{name: 'comments', color: colors.blue, title: makeTitle},
                                               {name: 'views', color: colors.purple, title: makeTitle},
-                                              {name: 'votes', color: colors.green, title: makeTitle}]);
+                                              {name: 'votes', color: colors.orange, title: makeTitle}]);
             chart.yAxisLabel('Count', 25)
             dc.renderAll();
         });

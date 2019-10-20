@@ -152,10 +152,18 @@ class AllTicketStatsView(PermissionRequiredMixin, TemplateView, DateRangeView):
     def get_context_data(self, **kwargs):
         context = super(AllTicketStatsView, self).get_context_data(**kwargs)
 
-        context['tickets'] = json.dumps(list(self.get_date_range_and_annotate(Ticket.objects.all()).values('date', 'ticket_type')))
-        context['comments'] = json.dumps(list(self.get_date_range_and_annotate(Comment.objects.all()).values('date')))
-        context['views'] = json.dumps(list(self.get_date_range_and_annotate(Pageview.objects.all()).values('date')))
-        context['votes'] = json.dumps(list(self.get_date_range_and_annotate(Vote.objects.all()).values('date', 'count')))
+        context['awaiting_approval'] = Ticket.objects.filter(approved=None).count()
+        context['top_5_features'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Feature', done=None).annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
+        context['top_5_bugs'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Bug', done=None).annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
+
+        chart_data = {}
+        chart_data['bugs'] = list(self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Bug')).values('date').annotate(total=Count('date')))
+        chart_data['features'] = list(self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Feature')).values('date').annotate(total=Count('date')))
+        chart_data['comments'] = list(self.get_date_range_and_annotate(Comment.objects.all()).values('date').annotate(total=Count('date')))
+        chart_data['views'] = list(self.get_date_range_and_annotate(Pageview.objects.all()).values('date').annotate(total=Count('date')))
+        chart_data['votes'] = list(self.get_date_range_and_annotate(Vote.objects.all()).values('date', 'count').annotate(total=Sum('count')).values('date', 'total'))
+
+        context['chart_data'] = json.dumps(chart_data)
 
         return context
 
