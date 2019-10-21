@@ -119,9 +119,7 @@ function createPieChart(chartID, ndx, keys) {
     let pie = dc.pieChart('#' + chartID);
 
     let typeDim = ndx.dimension(dc.pluck('type'));
-    let typeGroup = reduceCountByGroup(typeDim, keys.map(group => group.name))
-
-    console.log(typeGroup.all());
+    let typeGroup = reduceCountByGroup(typeDim, keys.map(group => group.name));
 
     pie.dimension(typeDim)
        .group(typeGroup)

@@ -105,9 +105,14 @@ class DateRangeView(ContextMixin):
         self.form = DateRangeForm(self.request.GET)
         self.form.is_valid()
 
-    def get_date_range_and_annotate(self, queryset):
+    def get_date_range_and_annotate(self, queryset, total=Count('date')):
+        '''
+        Filters the queryset by the date range, annotates the queryset with a date field base don the date_to_use (default 'created'),
+        groups the queryset by date, and annotates it with a total, based on the total annotation provided (default count).
+        '''
         queryset = filter_date_range(queryset, self.date_to_use, self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
         queryset = annotate_date(queryset, self.date_to_use)
+        queryset = queryset.values('date').annotate(total=total)
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -132,9 +137,9 @@ class TicketStatsView(AuthorOrAdminMixin, DateRangeView, DetailView):
 
         # Add stats to page context
         chart_data = {}
-        chart_data['comments'] = list(self.get_date_range_and_annotate(self.object.comment_set).values('date').annotate(total=Count('date')))
-        chart_data['views'] = list(self.get_date_range_and_annotate(self.object.pageview_set).values('date').annotate(total=Count('date')))
-        chart_data['votes'] = list(self.get_date_range_and_annotate(self.object.vote_set).values('date', 'count').annotate(total=Sum('count')).values('date', 'total'))
+        chart_data['comments'] = list(self.get_date_range_and_annotate(self.object.comment_set))
+        chart_data['views'] = list(self.get_date_range_and_annotate(self.object.pageview_set))
+        chart_data['votes'] = list(self.get_date_range_and_annotate(self.object.vote_set, total=Sum('count')))
 
         context['chart_data'] = json.dumps(chart_data)
 
@@ -157,11 +162,11 @@ class AllTicketStatsView(PermissionRequiredMixin, TemplateView, DateRangeView):
         context['top_5_bugs'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Bug', done=None).annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
 
         chart_data = {}
-        chart_data['bugs'] = list(self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Bug')).values('date').annotate(total=Count('date')))
-        chart_data['features'] = list(self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Feature')).values('date').annotate(total=Count('date')))
-        chart_data['comments'] = list(self.get_date_range_and_annotate(Comment.objects.all()).values('date').annotate(total=Count('date')))
-        chart_data['views'] = list(self.get_date_range_and_annotate(Pageview.objects.all()).values('date').annotate(total=Count('date')))
-        chart_data['votes'] = list(self.get_date_range_and_annotate(Vote.objects.all()).values('date', 'count').annotate(total=Sum('count')).values('date', 'total'))
+        chart_data['bugs'] = list(self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Bug')))
+        chart_data['features'] = list(self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Feature')))
+        chart_data['comments'] = list(self.get_date_range_and_annotate(Comment.objects.all()))
+        chart_data['views'] = list(self.get_date_range_and_annotate(Pageview.objects.all()))
+        chart_data['votes'] = list(self.get_date_range_and_annotate(Vote.objects.all(), total=Sum('count')))
 
         context['chart_data'] = json.dumps(chart_data)
 
@@ -180,8 +185,8 @@ class TransactionsStatsView(PermissionRequiredMixin, TemplateView, DateRangeView
         context = super(TransactionsStatsView, self).get_context_data(**kwargs)
 
         chart_data = {}
-        chart_data['credit'] = list(self.get_date_range_and_annotate(Credit.objects.filter(real_value__gte=1)).values('date', 'real_value').annotate(total=Sum('real_value')).values('date', 'total'))
-        chart_data['debit'] = list(self.get_date_range_and_annotate(Debit.objects.filter(real_value__gte=1)).values('date', 'real_value').annotate(total=Sum('real_value')).values('date', 'total'))
+        chart_data['credit'] = list(self.get_date_range_and_annotate(Credit.objects.filter(real_value__gte=1), total=Sum('real_value')))
+        chart_data['debit'] = list(self.get_date_range_and_annotate(Debit.objects.filter(real_value__gte=1), total=Sum('real_value')))
 
         context['chart_data'] = json.dumps(chart_data)
 

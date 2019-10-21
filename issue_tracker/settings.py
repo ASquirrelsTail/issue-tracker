@@ -151,8 +151,13 @@ AWS_S3_CUSTOM_DOMAIN = '{}.s3.amazonaws.com'.format(AWS_STORAGE_BUCKET_NAME)
 
 AWS_STATIC_LOCATION = 'static'
 
-STATIC_URL = 'https://{}/{}/'.format(AWS_S3_CUSTOM_DOMAIN, AWS_STATIC_LOCATION)
-STATICFILES_STORAGE = 'issue_tracker.custom_storages.StaticStorage'
+# if $LOCAL_STATIC is set, then use local static, else use AWS static storage
+
+if 'LOCAL_STATIC' in os.environ:
+    STATIC_URL = '/static/'
+else:
+    STATIC_URL = 'https://{}/{}/'.format(AWS_S3_CUSTOM_DOMAIN, AWS_STATIC_LOCATION)
+    STATICFILES_STORAGE = 'issue_tracker.custom_storages.StaticStorage'
 
 # Media file storage
 
