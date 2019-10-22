@@ -3,7 +3,7 @@
 {% load static %}
 {% block title %}Stats for #{{ object }}{% endblock %}
 {% block head %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/dc.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/libs/dc.css' %}">
 {% endblock %}
 {% block content %}
     <h1><a href="{% url 'ticket' pk=object.pk %}">{{ object }}</a></h1>

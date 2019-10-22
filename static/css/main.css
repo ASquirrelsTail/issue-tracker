@@ -1,0 +1,9 @@
+.reply {
+	border-left: black 1px solid;
+	padding-left: 1em;
+	margin-bottom: 0.7em;
+}
+
+.reply-to textarea {
+	height: 5em;
+}

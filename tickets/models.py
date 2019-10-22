@@ -174,7 +174,8 @@ class Comment(models.Model):
         return 'By {0} on ticket {1} @ {2}'.format(self.user.username, self.ticket.id, self.created.strftime('%d/%m/%y %H:%M'))
 
     def get_absolute_url(self):
-        return reverse('ticket', kwargs={'pk': self.ticket.pk}) + '#comment-{0}'.format(self.pk)
+        url_fragment = '#comment-{0}' if self.reply_to is None else '#reply-{0}'
+        return reverse('ticket', kwargs={'pk': self.ticket.pk}) + url_fragment.format(self.pk)
 
     @property
     def replies(self):

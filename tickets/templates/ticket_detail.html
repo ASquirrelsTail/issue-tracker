@@ -88,50 +88,70 @@
     <h3>{{ object.no_comments }} Comments:</h3>
     <hr>
     {% for comment in object.comments %}
-    <blockquote id="comment-{{ comment.id }}">
-        <p>Comment by {{ comment.user }} at {{ comment.created|date:'d/m/y H:i' }}</p>
-        {{ comment.content|linebreaks }}
-        {% if comment.edited %}
-        <p>Last edit {{ comment.edited|date:'d/m/y H:i' }}</p>
-        {% endif %}
-        {% if comment.user == user or perms.tickets.can_edit_all_comments %}
-        <a href="{% url 'edit-comment' ticket_pk=object.id pk=comment.id %}" class="btn btn-primary">Edit Comment</a>
-        {% endif %}
-    </blockquote>
-    {% if comment.replies %}
-        <p><b>{{ comment.no_replies }} Replies</b></p>
-        {% for reply in comment.replies %}
-            <blockquote id="comment-{{ reply.id }}">
-                <p>Reply by {{ reply.user }} at {{ reply.created|date:'d/m/y H:i' }}</p>
-                {{ reply.content|linebreaks }}
-                {% if reply.edited %}
-                <p>Last edit {{ reply.edited|date:'d/m/y H:i' }}</p>
-                {% endif %}
-                {% if reply.user == user or perms.tickets.can_edit_all_comments %}
-                <a href="{% url 'edit-comment' ticket_pk=object.id pk=reply.id %}" class="btn btn-primary">Edit Comment</a>
-                {% endif %}
+    <div class="row comment" id="comment-{{ comment.id }}">
+        <div class="col-sm-12">
+            <h4>Comment by {{ comment.user }} at {{ comment.created|date:'d/m/y H:i' }}</h4>
+            <blockquote>
+                {{ comment.content|linebreaks }}
             </blockquote>
-        {% endfor %}
-    {% endif %}
-    {% if comment_form %}
-    <a class="btn btn-primary" data-toggle="collapse" href="#add-reply-{{ comment.id }}" role="button" aria-expanded="false" aria-controls="add-reply-{{ comment.id }}">Reply</a>
-    <div id="add-reply-{{ comment.id }}" class="collapse">
-        <h3>Replying as {{ user.username }}</h3>
-        <form action="{% url 'add-reply' ticket_pk=object.id comment_pk=comment.id %}" method="post">
-            {% csrf_token %}
-            {% bootstrap_form comment_form %}
-            {% buttons %}
-            <button type="submit" class="btn btn-primary">Add Reply</button>
-            {% endbuttons %}
-        </form>
+        </div>
+        <div class="col-lg-8 col-sm-12 order-2 text-right">
+            {% if comment.edited %}
+            <span class="edited">Last edit {{ comment.edited|date:'d/m/y H:i' }}</span>
+            {% endif %}
+            {% if comment.user == user or perms.tickets.can_edit_all_comments %}
+            <a href="{% url 'edit-comment' ticket_pk=object.id pk=comment.id %}" class="btn btn-primary btn-edit">Edit Comment</a>
+            {% endif %}
+        </div>
+        <div class="col-lg-4 col-sm-12 order-lg-1 order-3">
+            {% if comment.replies %}
+            <a data-toggle="collapse" href="#comment-{{ comment.id }}-replies" role="button" aria-expanded="false" aria-controls="comment-{{ comment.id }}-replies">
+                <span class="reply-toggle" >[+]</span> {{ comment.no_replies }} Replies 
+            </a>
+            {% endif %}
+            {% if comment_form %}
+            <a class="btn btn-primary btn-reply-to" data-toggle="collapse" href="#comment-{{ comment.id }}-replies" role="button" aria-expanded="false" aria-controls="comment-{{ comment.id }}-replies">Reply</a>
+            {% endif %}
+        </div>
+        <div class="col-sm-11 offset-sm-1 order-6 collapse replies" id="comment-{{ comment.id }}-replies">
+            {% if comment.replies %}
+                {% for reply in comment.replies %}
+                <div class="reply" id="reply-{{ reply.id }}">
+                    <h5>Reply by {{ reply.user }} at {{ reply.created|date:'d/m/y H:i' }}</h5>
+                    <blockquote>
+                        {{ reply.content|linebreaks }}
+                    </blockquote>
+                    <div class="text-right">
+                    {% if reply.edited %}
+                        <span class="edited">Last edit {{ reply.edited|date:'d/m/y H:i' }}</span>
+                        {% endif %}
+                        {% if reply.user == user or perms.tickets.can_edit_all_comments %}
+                        <a href="{% url 'edit-comment' ticket_pk=object.id pk=reply.id %}" class="btn btn-primary btn-edit">Edit Reply</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% if comment_form %}
+            <div class="reply-to" id="reply-to-{{ comment.id }}">
+                <h3>Replying as {{ user.username }}</h3>
+                <form action="{% url 'add-reply' ticket_pk=object.id comment_pk=comment.id %}" method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form comment_form %}
+                    {% buttons %}
+                    <button type="submit" class="btn btn-primary">Add Reply</button>
+                    {% endbuttons %}
+                </form>
+            </div>
+            {% else %}
+                <a href="{% url 'login' %}?next={{ request.path }}%23reply-to-{{ comment.id }}" class="btn btn-primary">Log in to reply</a>
+            {% endif %}
+        </div>
     </div>
-    {% else %}
-        <a href="{% url 'login' %}?next={{ request.path }}%23add-reply-{{ comment.id }}" class="btn btn-primary">Log in to reply</a>
-    {% endif %}
     <hr>
     {% endfor %}
 {% else %}
-    <h2>No comments yet!</h2>
+    <h3>No comments yet!</h3>
     <p>Be the first!</p>
     <hr>
 {% endif %}
@@ -148,5 +168,31 @@
     <a href="{% url 'login' %}?next={{ request.path }}%23add-comment" class="btn btn-primary">Log in to comment</a>
 {% endif %}
 {% endif %}
-    
+{% endblock %}
+{% block javascript %}
+<script>
+    $(function() {       
+        // When the replies are opened and closed, change the -/+ indicator, and hide/show the reply button
+        $('.replies').on('shown.bs.collapse', function() {
+            $(this).parent().find('.reply-toggle').text('[-]');
+        }).on('show.bs.collapse', function() {
+            $(this).parent().find('.btn-reply-to').fadeOut();
+        }).on('hidden.bs.collapse', function() {
+            $(this).parent().find('.reply-toggle').text('[+]');
+        }).on('hide.bs.collapse', function() {
+            $(this).parent().find('.btn-reply-to').fadeIn(200);
+        });
+        
+        // Focus the reply textarea when the reply to button is pressed. Delay to allow replies collapse to open.
+        $('.btn-reply-to').on('click', function() {
+            let textarea = $($(this).attr('href')).find('textarea')[0];
+
+            window.setTimeout(function() {textarea.focus();}, 200);
+        });
+
+        // If the user has been directed to a reply, open the reply thread on load.
+        if (window.location.hash && window.location.hash.includes('reply')) $(window.location.hash).parent().collapse('show');
+
+    });
+</script>
 {% endblock %}
