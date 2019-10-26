@@ -2,19 +2,23 @@
 {% load bootstrap4 %}
 {% block title %}Labels{% endblock %}
 {% block content %}
-<h1>Labels</h1>
-<h2>Add a new label to use with Tickets.</h2>
-<form method="post", action="{% url 'add-label' %}">
-    {% csrf_token %}
-    {% bootstrap_form label_form %}
-    {% buttons %}
-    <button type="submit" class="btn btn-primary">Add New Label</button>
-    {% endbuttons %}
-</form>
-<h3>All Labels</h3>
-<ul>
-{% for label in object_list %}
-    <li><a href="{{ label.get_absolute_url }}">{{ label.name }}</a> - <a href="{% url 'edit-label' pk=label.id %}">Edit</a> - <a href="{% url 'delete-label' pk=label.id %}">Delete</a></li>
-{% endfor %}
-</ul>
+<section class="row content">
+    <div class="col-12">
+        <h1>Labels</h1>
+        <h2>Add a new label to use with Tickets.</h2>
+        <form method="post", action="{% url 'add-label' %}">
+            {% csrf_token %}
+            {% bootstrap_form label_form %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Add New Label</button>
+            {% endbuttons %}
+        </form>
+        <h3>All Labels</h3>
+        <ul>
+        {% for label in object_list %}
+            <li><a href="{{ label.get_absolute_url }}">{{ label.name }}</a> - <a href="{% url 'edit-label' pk=label.id %}">Edit</a> - <a href="{% url 'delete-label' pk=label.id %}">Delete</a></li>
+        {% endfor %}
+        </ul>
+    </div>
+</section>
 {% endblock %}

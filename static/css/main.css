@@ -1,9 +1,130 @@
-.reply {
-	border-left: black 1px solid;
-	padding-left: 1em;
-	margin-bottom: 0.7em;
-}
-
 .reply-to textarea {
 	height: 5em;
+}
+
+body {
+	background: rgb(249,38,114);
+	background: linear-gradient(63deg, rgba(249,38,114,1) 0%, rgba(102,217,239,1) 31%, rgba(253,151,31,1) 100%);
+	background-attachment: fixed;
+	font-family: Montserrat;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: Nunito;
+	font-weight: bold;
+	margin-bottom: 0rem;
+	margin-top: 0.5rem;
+}
+
+.btn {
+	font-family: Nunito;
+	border-radius: 1.2em;
+}
+
+@media (max-width: 575px) {
+	.container {
+		margin: 0 0.5rem;
+		width: unset;
+	}
+}
+
+.content {
+	margin-top: 0.5rem;
+	margin-bottom: 0.5rem;
+}
+
+.squares .col-12{
+	padding: 0.5rem;
+}
+
+.squares .col-12::after {
+	content: " ";
+	display: block;
+	height: 0;
+	width: 0;
+	padding-bottom: 100%
+}
+
+.square {
+	position: absolute;
+	top: 2.5%;
+	left: 2.5%;
+	width: 95%;
+	height: 95%;
+	padding: 0.5rem;
+	background-color: white;
+	border-radius: 1rem;
+	text-align: center;
+	display: flex;
+	align-items: center;
+}
+
+.square .square-content {
+	width: 100%;
+}
+
+.square .big {
+	font-size: 4em;
+}
+
+.square .huge {
+	font-size: 8em;
+}
+
+.content, .comment, .reply, .reply-to, .add-comment {
+	background-color: white;
+	border-radius: 1rem;
+	padding-bottom: 0.5rem;
+}
+
+.comment, .add-comment {
+	margin-top: 0.5rem;
+}
+
+.reply, .reply-to {
+	margin-top: 0.5rem;
+	padding: 0.5rem 15px;
+}
+
+.replies .col-11 {
+	padding: 0;
+}
+
+.reply-toggle {
+	margin-right: 1rem;
+}
+
+.reply-toggle span {
+	font-family: "Courier New", Courier, monospace;
+	font-weight: bold;
+	font-size: 1.5em;
+	padding: .375rem 0;
+	margin-bottom: 0.5rem;
+	line-height: 1.5;
+}
+
+.add-comment {
+	margin-bottom: 0.5rem;
+}
+
+.ticket-image {
+	cursor: zoom-in;
+}
+
+#imageModal {
+	cursor: zoom-out;
+}
+
+#imageModal .modal-dialog {
+	max-width: unset;
+	height: 100%;
+	margin: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+#imageModal .img-fluid {
+	max-height: 90vh;
+	padding: 1rem;
 }

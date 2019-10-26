@@ -2,100 +2,94 @@
 {% load bootstrap4 %}
 {% block title %}{{ object }}{% endblock %}
 {% block content %}
-<h1>{{ object }}</h1>
-<h2>{{ object.status|capfirst }}</h2>
-{% if perms.tickets.can_update_ticket_status %}
-    {% if object.approved is None %}
-        <form action="{% url 'approve-ticket' pk=object.id %}" method="post">
-            {% csrf_token %}
-            {% buttons %}
-            <button type="submit" class="btn btn-primary">Approve</button>
-            {% endbuttons %}
-        </form>
-    {% elif object.doing is None %}
-        <form action="{% url 'doing-ticket' pk=object.id %}" method="post">
-            {% csrf_token %}
-            {% buttons %}
-            <button type="submit" class="btn btn-primary">Doing</button>
-            {% endbuttons %}
-        </form>
-    {% elif object.done is None %}
-        <form action="{% url 'done-ticket' pk=object.id %}" method="post">
-            {% csrf_token %}
-            {% buttons %}
-            <button type="submit" class="btn btn-primary">Done</button>
-            {% endbuttons %}
-        </form>
-    {% endif %}
-{% endif %}
-<p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
-{% if object.approved and not object.done %}
-{% if not has_voted or object.ticket_type == 'Feature' %}
-    {% if user.is_authenticated %}
-    {% if object.ticket_type != 'Feature' or wallet_balance > 0 %}
-    <form action="{% url 'vote-for-ticket' pk=object.id %}" method="post">
-        {% csrf_token %}
-        {% if vote_form %}
-        {% bootstrap_form vote_form %}
-        {% endif %}
-        {% buttons %}
-        <button type="submit" class="btn btn-primary">Upvote</button>
-        {% endbuttons %}
-    </form>
-    {% else %}
-    <a href="{% url 'get_credits' %}" class="btn btn-primary">Get more credits to vote for this {{ object.noun }}</a> 
-    {% endif %}
-    {% else %}
-    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Log in to vote for this {{ object.noun }}</a>   
-    {% endif %}
-{% else %}
-<p>You have already voted.</p>
-{% endif %}
-{% endif %}
-{{ object.content|linebreaks }}
-{% if object.image %}
-    <div class="col-6 col-md-3 col-lg-2">
-        <a data-toggle="modal" data-target="#imageModal">
-            <img src="{{ object.image.url }}" alt="Attached image for {{ object }}" class="img-thumbnail img-fluid">
-        </a>
-    </div>
-<!-- Image Modal -->
-    <div class="modal fade lightbox" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="imageModalLabel">Attached image</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+<article class="row content">
+    <div class="col-12">
+            <h1>{{ object }}</h1>
+            <h2{% if object.status == 'awaiting approval' %} class="alert alert-warning"{% endif %}>{{ object.status|capfirst }}</h2>
+            {% if perms.tickets.can_update_ticket_status %}
+                {% if object.approved is None %}
+                    <form action="{% url 'approve-ticket' pk=object.id %}" method="post">
+                        {% csrf_token %}
+                        {% buttons %}
+                        <button type="submit" class="btn btn-primary">Approve</button>
+                        {% endbuttons %}
+                    </form>
+                {% elif object.doing is None %}
+                    <form action="{% url 'doing-ticket' pk=object.id %}" method="post">
+                        {% csrf_token %}
+                        {% buttons %}
+                        <button type="submit" class="btn btn-primary">Doing</button>
+                        {% endbuttons %}
+                    </form>
+                {% elif object.done is None %}
+                    <form action="{% url 'done-ticket' pk=object.id %}" method="post">
+                        {% csrf_token %}
+                        {% buttons %}
+                        <button type="submit" class="btn btn-primary">Done</button>
+                        {% endbuttons %}
+                    </form>
+                {% endif %}
+            {% endif %}
+            <p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
+            {% if object.approved and not object.done %}
+            {% if not has_voted or object.ticket_type == 'Feature' %}
+                {% if user.is_authenticated %}
+                {% if object.ticket_type != 'Feature' or wallet_balance > 0 %}
+                <form action="{% url 'vote-for-ticket' pk=object.id %}" method="post">
+                    {% csrf_token %}
+                    {% if vote_form %}
+                    {% bootstrap_form vote_form %}
+                    {% endif %}
+                    {% buttons %}
+                    <button type="submit" class="btn btn-primary">Upvote</button>
+                    {% endbuttons %}
+                </form>
+                {% else %}
+                <a href="{% url 'get_credits' %}" class="btn btn-primary">Get more credits to vote for this {{ object.noun }}</a> 
+                {% endif %}
+                {% else %}
+                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Log in to vote for this {{ object.noun }}</a>   
+                {% endif %}
+            {% else %}
+            <p>You have already voted.</p>
+            {% endif %}
+            {% endif %}
+            {{ object.content|linebreaks }}
+            {% if object.image %}
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a data-toggle="modal" data-target="#imageModal" class="ticket-image">
+                        <img src="{{ object.image.url }}" alt="Attached image for {{ object }}" class="img-thumbnail img-fluid">
+                    </a>
                 </div>
-                <div class="modal-body">
-                    <img src="{{ object.image.url }}" alt="Attached image for {{ object }}" class="img-fluid">
-                </div>
+            {% endif %}
+            <div class="text-right">
+            {% if object.edited %}
+                Last edit {{ object.edited|date:'d/m/y H:i' }}
+            {% endif %}
+            {% if object.user == user or perms.tickets.can_edit_all_tickets %}
+                <a href="{% url 'edit-ticket' pk=object.id %}" class="btn btn-primary">Edit Ticket</a>
+                <a href="{% url 'delete-ticket' pk=object.id %}" class="btn btn-danger">Delete Ticket</a>
+            {% endif %}
             </div>
+    </div>
+</article>
+{% if object.approved %}
+<section id="comments">
+{% if object.comments %}
+    <div class="row comment">
+        <div class="col-12">
+            <h3>{{ object.no_comments }} Comments:</h3>
         </div>
     </div>
-{% endif %}
-{% if object.edited %}
-    <p>Last edit {{ object.edited|date:'d/m/y H:i' }}</p>
-{% endif %}
-{% if object.user == user or perms.tickets.can_edit_all_tickets %}
-    <a href="{% url 'edit-ticket' pk=object.id %}" class="btn btn-primary">Edit Ticket</a>
-    <a href="{% url 'delete-ticket' pk=object.id %}" class="btn btn-danger">Delete Ticket</a>
-{% endif %}
-{% if object.approved %}
-{% if object.comments %}
-    <h3>{{ object.no_comments }} Comments:</h3>
-    <hr>
     {% for comment in object.comments %}
     <div class="row comment" id="comment-{{ comment.id }}">
-        <div class="col-sm-12">
+        <div class="col-12">
             <h4>Comment by {{ comment.user }} at {{ comment.created|date:'d/m/y H:i' }}</h4>
             <blockquote>
                 {{ comment.content|linebreaks }}
             </blockquote>
         </div>
-        <div class="col-lg-8 col-sm-12 order-2 text-right">
+        <div class="col-lg-8 col-12 order-2 text-right">
             {% if comment.edited %}
             <span class="edited">Last edit {{ comment.edited|date:'d/m/y H:i' }}</span>
             {% endif %}
@@ -103,17 +97,19 @@
             <a href="{% url 'edit-comment' ticket_pk=object.id pk=comment.id %}" class="btn btn-primary btn-edit">Edit Comment</a>
             {% endif %}
         </div>
-        <div class="col-lg-4 col-sm-12 order-lg-1 order-3">
+        <div class="col-lg-4 col-12 order-lg-1 order-3">
             {% if comment.replies %}
-            <a data-toggle="collapse" href="#comment-{{ comment.id }}-replies" role="button" aria-expanded="false" aria-controls="comment-{{ comment.id }}-replies">
-                <span class="reply-toggle" >[+]</span> {{ comment.no_replies }} Replies 
+            <a data-toggle="collapse" href="#comment-{{ comment.id }}-replies" role="button" aria-expanded="false" aria-controls="comment-{{ comment.id }}-replies" class="reply-toggle">
+                <span>[+]</span> {{ comment.no_replies }} Replies
             </a>
             {% endif %}
             {% if comment_form %}
             <a class="btn btn-primary btn-reply-to" data-toggle="collapse" href="#comment-{{ comment.id }}-replies" role="button" aria-expanded="false" aria-controls="comment-{{ comment.id }}-replies">Reply</a>
             {% endif %}
         </div>
-        <div class="col-sm-11 offset-sm-1 order-6 collapse replies" id="comment-{{ comment.id }}-replies">
+    </div>
+    <div class="row replies collapse" id="comment-{{ comment.id }}-replies">
+        <div class="col-11 offset-1">
             {% if comment.replies %}
                 {% for reply in comment.replies %}
                 <div class="reply" id="reply-{{ reply.id }}">
@@ -135,38 +131,60 @@
             {% if comment_form %}
             <div class="reply-to" id="reply-to-{{ comment.id }}">
                 <h3>Replying as {{ user.username }}</h3>
-                <form action="{% url 'add-reply' ticket_pk=object.id comment_pk=comment.id %}" method="post">
-                    {% csrf_token %}
-                    {% bootstrap_form comment_form %}
-                    {% buttons %}
-                    <button type="submit" class="btn btn-primary">Add Reply</button>
-                    {% endbuttons %}
-                </form>
+                <div>
+                    <form action="{% url 'add-reply' ticket_pk=object.id comment_pk=comment.id %}" method="post">
+                        {% csrf_token %}
+                        {% bootstrap_form comment_form %}
+                        {% buttons %}
+                        <button type="submit" class="btn btn-primary">Add Reply</button>
+                        {% endbuttons %}
+                    </form>
+                </div>
             </div>
             {% else %}
+            <div class="reply-to text-center" id="reply-to-{{ comment.id }}">
                 <a href="{% url 'login' %}?next={{ request.path }}%23reply-to-{{ comment.id }}" class="btn btn-primary">Log in to reply</a>
+            </div>
             {% endif %}
         </div>
     </div>
-    <hr>
     {% endfor %}
 {% else %}
-    <h3>No comments yet!</h3>
-    <p>Be the first!</p>
-    <hr>
+    <div class="row comment">
+        <div class="col-12">
+            <h3>No comments yet!</h3>
+            <p>Be the first!</p>
+        </div>
+    </div>
 {% endif %}
-{% if comment_form %}
-    <h3 id="add-comment">Commenting as {{ user.username }}</h3>
-    <form action="{% url 'add-comment' ticket_pk=object.id %}" method="post">
-        {% csrf_token %}
-        {% bootstrap_form comment_form %}
-        {% buttons %}
-        <button type="submit" class="btn btn-primary">Add Comment</button>
-        {% endbuttons %}
-    </form>
-{% else %}
-    <a href="{% url 'login' %}?next={{ request.path }}%23add-comment" class="btn btn-primary">Log in to comment</a>
+    <div class="row add-comment" id="add-comment">
+        <div class="col-12">
+        {% if comment_form %}
+            <h4>Commenting as {{ user.username }}</h4>
+            <form action="{% url 'add-comment' ticket_pk=object.id %}" method="post">
+                {% csrf_token %}
+                {% bootstrap_form comment_form %}
+                {% buttons %}
+                <button type="submit" class="btn btn-primary">Add Comment</button>
+                {% endbuttons %}
+            </form>
+        {% else %}
+        <h4>Log in to comment</h4>
+        <div class="text-center">
+            <a href="{% url 'login' %}?next={{ request.path }}%23add-comment" class="btn btn-primary">Log in</a>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+</section>
 {% endif %}
+{% if object.image %}
+<!-- Image Modal -->
+<div class="modal fade lightbox" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <img src="{{ object.image.url }}" alt="Attached image for {{ object }}" class="img-fluid">
+    </div>
+</div>
 {% endif %}
 {% endblock %}
 {% block javascript %}
@@ -174,24 +192,25 @@
     $(function() {       
         // When the replies are opened and closed, change the -/+ indicator, and hide/show the reply button
         $('.replies').on('shown.bs.collapse', function() {
-            $(this).parent().find('.reply-toggle').text('[-]');
+            $(this).prev().find('.reply-toggle span').text('[-]');
         }).on('show.bs.collapse', function() {
-            $(this).parent().find('.btn-reply-to').fadeOut();
+            $(this).prev().find('.btn-reply-to').fadeOut();
         }).on('hidden.bs.collapse', function() {
-            $(this).parent().find('.reply-toggle').text('[+]');
+            $(this).prev().find('.reply-toggle span').text('[+]');
         }).on('hide.bs.collapse', function() {
-            $(this).parent().find('.btn-reply-to').fadeIn(200);
+            $(this).prev().find('.btn-reply-to').fadeIn(200);
         });
         
-        // Focus the reply textarea when the reply to button is pressed. Delay to allow replies collapse to open.
+        // Focus the reply textarea when the reply to button is pressed and replies accordion has opened
         $('.btn-reply-to').on('click', function() {
-            let textarea = $($(this).attr('href')).find('textarea')[0];
-
-            window.setTimeout(function() {textarea.focus();}, 200);
+            $($(this).attr('href')).one('shown.bs.collapse', function() {$(this).find('textarea')[0].focus();});
         });
 
-        // If the user has been directed to a reply, open the reply thread on load.
-        if (window.location.hash && window.location.hash.includes('reply')) $(window.location.hash).parent().collapse('show');
+        // If the user has been directed to a reply or reply-to form, open the reply thread on load and scroll to it.
+        if (window.location.hash && window.location.hash.includes('reply')) {
+            $(window.location.hash).parent().parent().collapse('show')
+                .one('shown.bs.collapse', function() {$(window.location.hash)[0].scrollIntoView();});
+        }
 
     });
 </script>

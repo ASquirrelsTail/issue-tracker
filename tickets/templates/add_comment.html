@@ -2,16 +2,20 @@
 {% load bootstrap4 %}
 {% block title %}Add Comment{% endblock %}
 {% block content %}
-{% if not reply_to %}
-<h1>Add Comment for {{ ticket }}</h1>
-{% else %}
-<h1>Add reply to {{ reply_to.user }} on {{ ticket }}</h1>
-{% endif %}
-<form method="post">
-    {% csrf_token %}
-    {% bootstrap_form form %}
-    {% buttons %}
-    <button type="submit" class="btn btn-primary">Add Comment</button>
-    {% endbuttons %}
-</form>
+<section class="row content">
+    <div class="col-12">
+        {% if not reply_to %}
+        <h1>Add Comment for {{ ticket }}</h1>
+        {% else %}
+        <h1>Add reply to {{ reply_to.user }} on {{ ticket }}</h1>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Add Comment</button>
+            {% endbuttons %}
+        </form>
+    </div>
+</section>
 {% endblock %}

@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Your Credits{% endblock %}
 {% block content %}
-<h1>Credits: {{ wallet_balance }}</h1>
-<a href="{% url 'get_credits' %}" class="btn btn-primary">Get more credits</a>
+<section class="content">
+    <div class="col-12">
+        <h1>Credits: {{ wallet_balance }}</h1>
+        <a href="{% url 'get_credits' %}" class="btn btn-primary">Get more credits</a>
+    </div>
+</section>
 {% endblock %}

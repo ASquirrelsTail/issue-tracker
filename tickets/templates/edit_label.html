@@ -2,12 +2,16 @@
 {% load bootstrap4 %}
 {% block title %}Edit label - {{ object.name }}{% endblock %}
 {% block content %}
-<h1>Edit label - {{ object.name }}</h1>
-<form method="post">
-    {% csrf_token %}
-    {% bootstrap_form form %}
-    {% buttons %}
-    <button type="submit" class="btn btn-primary">Edit Label</button>
-    {% endbuttons %}
-</form>
+<section class="row content">
+    <div class="col-12">
+        <h1>Edit label - {{ object.name }}</h1>
+        <form method="post">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Edit Label</button>
+            {% endbuttons %}
+        </form>
+    </div>
+</section>
 {% endblock %}

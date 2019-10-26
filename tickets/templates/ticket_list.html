@@ -2,77 +2,98 @@
 {% load bootstrap4 %}
 {% block title %}Tickets{% endblock %}
 {% block content %}
-<h1>Tickets</h1>
-<h2>Filters:</h2>
-<form action="" method="GET">
-    {% bootstrap_form filter_form %}
-    {% buttons %}
-    <button type="submit" class="btn btn-primary">Filter</button>
-    {% endbuttons %}
-</form>
-{% if object_list %}
-<h3>{{ no_tickets }} Tickets</h3>
-{% endif %}
-<ul>
-{% for ticket in object_list %}
-    <li>
-        <a href="{% url 'ticket' pk=ticket.pk %}">{{ ticket }}</a>
-        {% if ticket.status != 'approved' %}
-         - {{ ticket.status }}
-        {% endif %}
-    </li>
-{% empty %}
-<p>No tickets yet!</p>
-{% endfor %}
-</ul>
+<article>
+    <div class="row content">
+        <div class="col-12">
+            <h1>Tickets</h1>
+        </div>
+    </div>
+    <div class="row content">
+        <div class="col-12">
+            <h2>Filters:</h2>
+            <form action="" method="GET">
+                {% bootstrap_form filter_form %}
+                {% buttons %}
+                <button type="submit" class="btn btn-primary">Filter</button>
+                {% endbuttons %}
+            </form>
+        </div>
+    </div>
+    <div class="row content">
+        <div class="col-12">
+            {% if object_list %}
+            <h3>{{ no_tickets }} Tickets</h3>
+            {% else %}
+            <h3>No tickets yet...</h3>
+            {% endif %}
+            <ul>
+            {% for ticket in object_list %}
+                <li>
+                    <a href="{% url 'ticket' pk=ticket.pk %}">{{ ticket }}</a>
+                    {% if ticket.status != 'approved' %}
+                     - {{ ticket.status }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+        <div class="col-12">
+            <nav aria-label="Pagination">
+                <ul class="pagination justify-content-center">
+                {% if is_paginated %}
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% url 'tickets-list' %}{{ query_string }}{{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                    {% endif %}
+                    {% for page_number in page_range %}
+                    {% if page_number == page_obj.number %}
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_number }}
+                            <span class="sr-only">(current)</span>
+                        </span>
+                    </li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="{% url 'tickets-list' %}{{ query_string }}{{ page_number }}">{{ page_number }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% url 'tickets-list' %}{{ query_string }}{{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                    {% endif %}
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">
+                            1
+                            <span class="sr-only">(current)</span>
+                        </span>
+                    </li>
+                    <li class="page-item  disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                {% endif %}  
+                </ul>
+            </nav>
+        </div>
+    </div>
+</article>
 
-<nav aria-label="Pagination">
-    <ul class="pagination">
-    {% if is_paginated %}
-        {% if page_obj.has_previous %}
-        <li class="page-item">
-            <a class="page-link" href="{% url 'tickets-list' %}{{ query_string }}{{ page_obj.previous_page_number }}">Previous</a>
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-            <span class="page-link">Previous</span>
-        </li>
-        {% endif %}
-        {% for page_number in page_range %}
-        {% if page_number == page_obj.number %}
-        <li class="page-item active">
-            <span class="page-link">
-                {{ page_number }}
-                <span class="sr-only">(current)</span>
-            </span>
-        </li>
-        {% else %}
-        <li class="page-item"><a class="page-link" href="{% url 'tickets-list' %}{{ query_string }}{{ page_number }}">{{ page_number }}</a></li>
-        {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}
-        <li class="page-item">
-            <a class="page-link" href="{% url 'tickets-list' %}{{ query_string }}{{ page_obj.next_page_number }}">Next</a>
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-            <span class="page-link">Next</span>
-        </li>
-        {% endif %}
-    {% else %}
-        <li class="page-item disabled">
-            <span class="page-link">Previous</span>
-        </li>
-        <li class="page-item active">
-            <span class="page-link">
-                1
-                <span class="sr-only">(current)</span>
-            </span>
-        </li>
-        <li class="page-item  disabled">
-            <span class="page-link">Next</span>
-        </li>
-    {% endif %}  
-    </ul>
-</nav>
+
+
+
+
+
 {% endblock %}

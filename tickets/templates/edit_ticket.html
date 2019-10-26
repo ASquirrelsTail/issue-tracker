@@ -2,12 +2,16 @@
 {% load bootstrap4 %}
 {% block title %}Edit {{ object.noun }}{% endblock %}
 {% block content %}
-<h1>Edit {{ object.noun }}</h1>
-<form method="post" action="{% url 'edit-ticket' pk=object.id %}" enctype="multipart/form-data">
-    {% csrf_token %}
-    {% bootstrap_form form %}
-    {% buttons %}
-    <button type="submit" class="btn btn-primary">Save Edit</button>
-    {% endbuttons %}
-</form>
+<section class="row content">
+    <div class="col-12">
+        <h1>Edit {{ object.noun }}</h1>
+        <form method="post" action="{% url 'edit-ticket' pk=object.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Save Edit</button>
+            {% endbuttons %}
+        </form>
+    </div>
+</section>
 {% endblock %}

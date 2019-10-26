@@ -2,12 +2,16 @@
 {% load bootstrap4 %}
 {% block title %}Request Feature{% endblock %}
 {% block content %}
-<h1>Request Feature</h1>
-<form method="post" action="{% url 'add-feature' %}" enctype="multipart/form-data">
-    {% csrf_token %}
-    {% bootstrap_form form %}
-    {% buttons %}
-    <button type="submit" class="btn btn-primary">Submit</button>
-    {% endbuttons %}
-</form>
+<section class="row content">
+    <div class="col-12">
+        <h1>Request Feature</h1>
+        <form method="post" action="{% url 'add-feature' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Submit</button>
+            {% endbuttons %}
+        </form>
+    </div>
+</section>
 {% endblock %}

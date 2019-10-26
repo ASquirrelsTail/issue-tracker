@@ -6,14 +6,18 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/libs/dc.css' %}">
 {% endblock %}
 {% block content %}
-    <h1>All transaction stats</h1>
-    <form action="" method="GET">
-        {% bootstrap_form date_range_form %}
-        {% buttons %}
-        <button type="submit" class="btn btn-primary">Filter</button>
-        {% endbuttons %}
-    </form>
-    <div id="chart" class="col-sm-12"></div>
+<section class="content">
+    <div class="col-12">
+        <h1>All transaction stats</h1>
+        <form action="" method="GET">
+            {% bootstrap_form date_range_form %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Filter</button>
+            {% endbuttons %}
+        </form>
+        <div id="chart" class="col-sm-12"></div>
+    </div>
+</section>
 {% endblock %}
 {% block javascript %}
     <script src="{% static 'js/libs/d3.js' %}" type="text/javascript"></script>

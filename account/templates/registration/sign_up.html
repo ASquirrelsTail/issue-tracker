@@ -2,14 +2,18 @@
 {% load bootstrap4 %}
 {% block title %}Sign Up{% endblock %}
 {% block content %}
-<h1>Sign Up</h1>
-<form method="post" action="{% url 'signup' %}">
-    {% csrf_token %}
-    {% csrf_token %}
-    {% bootstrap_form form %}
-    {% buttons %}
-    <button type="submit" class="btn btn-primary">Sign Up</button>
-    {% endbuttons %}
-</form>
-<p>Already have an account? <a href="{% url 'login' %}">Log In</a>.</p>
+<section class="content">
+    <div class="col-12">
+        <h1>Sign Up</h1>
+        <form method="post" action="{% url 'signup' %}">
+            {% csrf_token %}
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Sign Up</button>
+            {% endbuttons %}
+        </form>
+        <p>Already have an account? <a href="{% url 'login' %}">Log In</a>.</p>
+    </div>
+</section>
 {% endblock %}

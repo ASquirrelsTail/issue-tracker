@@ -2,52 +2,56 @@
 {% load bootstrap4 %}
 {% block title %}Get Credits - Pay{% endblock %}
 {% block content %}
-<h1>Get Credits - Pay</h1>
-<h2>{{ no_credits }} credits for £{{ charge }}</h2>
-<form id="payment-form" data-secret="{{ client_secret }}">
-    <div id="card-element"></div>
-    {% buttons %}
-    <button type="submit" class="btn btn-primary">Pay</button>
-    {% endbuttons %}
-    <p>Use: 4000002500003155</p>
-    <p>Use: 4000008260003178 to fail with insufficient funds</p>
-</form>
-<!-- Modal to display payment error messages -->
-<div class="modal" id="payment-error-modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Payment failed</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+<section class="content">
+    <div class="col-12">
+        <h1>Get Credits - Pay</h1>
+        <h2>{{ no_credits }} credits for £{{ charge }}</h2>
+        <form id="payment-form" data-secret="{{ client_secret }}">
+            <div id="card-element"></div>
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Pay</button>
+            {% endbuttons %}
+            <p>Use: 4000002500003155</p>
+            <p>Use: 4000008260003178 to fail with insufficient funds</p>
+        </form>
+        <!-- Modal to display payment error messages -->
+        <div class="modal" id="payment-error-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Payment failed</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="payment-error-message">Something went wrong with the payment.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-                <p id="payment-error-message">Something went wrong with the payment.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        </div>
+        <!-- Model to display payment processing spinner -->
+        <div class="modal" id="payment-processing-modal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Processing Payment...</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center">
+                            <div class="spinner-border m-5" role="status">
+                                <span class="sr-only">Processing...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<!-- Model to display payment processing spinner -->
-<div class="modal" id="payment-processing-modal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Processing Payment...</h5>
-            </div>
-            <div class="modal-body">
-                <div class="text-center">
-				    <div class="spinner-border m-5" role="status">
-				        <span class="sr-only">Processing...</span>
-				    </div>
-				</div>
-            </div>
-        </div>
-    </div>
-</div>
+</section>
 {% endblock %}
 {% block javascript %}
 <script>

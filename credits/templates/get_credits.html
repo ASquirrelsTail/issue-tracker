@@ -2,12 +2,16 @@
 {% load bootstrap4 %}
 {% block title %}Get Credits{% endblock %}
 {% block content %}
-<h1>Get Credits</h1>
-<form method='POST'>
-    {% csrf_token %}
-    {% bootstrap_form form %}
-    {% buttons %}
-    <button type="submit" class="btn btn-primary">Get Credits</button>
-    {% endbuttons %}
-</form>
+<section class="content">
+    <div class="col-12">
+        <h1>Get Credits</h1>
+        <form method='POST'>
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary">Get Credits</button>
+            {% endbuttons %}
+        </form>
+    </div>
+</section>
 {% endblock %}
