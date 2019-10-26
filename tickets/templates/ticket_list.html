@@ -10,13 +10,26 @@
     </div>
     <div class="row content">
         <div class="col-12">
-            <h2>Filters:</h2>
-            <form action="" method="GET">
-                {% bootstrap_form filter_form %}
-                {% buttons %}
-                <button type="submit" class="btn btn-primary">Filter</button>
-                {% endbuttons %}
-            </form>
+            <a data-toggle="collapse" href="#filters" role="button" aria-expanded="{% if filter_form.has_changed %}false{% else %}true{% endif %}" aria-controls="filters" class="filter-toggle {% if not filter_form.has_changed %}collapsed{% endif %}">
+                <h2>Filters <span>[{% if filter_form.has_changed %}-{% else %}+{% endif %}]</span></h2>
+            </a>
+            <div id="filters" class="collapse {% if filter_form.has_changed %}show{% endif %}">
+                <form id="filter-form" action="" method="GET">
+                    <div class="row">
+                        <div class="col-12 col-lg-6">
+                            {% bootstrap_form filter_form exclude="labels" %}
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            {% bootstrap_field filter_form.labels form_group_class="sr-only" %}
+                        </div>
+                        <div class="col-12">
+                            {% buttons %}
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            {% endbuttons %}
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
     <div class="row content">
@@ -90,10 +103,32 @@
         </div>
     </div>
 </article>
+{% endblock %}
+{% block javascript %}
+<script>
+    $(function() {       
+        // When the replies are opened and closed, change the -/+ indicator, and hide/show the reply button
+        $('#filters').on('shown.bs.collapse', function() {
+            $('.filter-toggle span').text('[-]');
+        }).on('hidden.bs.collapse', function() {
+            $('.filter-toggle span').text('[+]');
+        });
 
+        $('#id_labels option').each(function() {
+            let option = $(this);
+            let name = option.text();
+            let value = option.attr('value');
+            let selected = option.prop('selected') ? 'selected' : null;
+            $('#id_labels').parent().parent().append('<div id="label-chips" class="chips" aria-hidden="true"></div>')
+            $('#label-chips').append(`<div class="chip ${selected}" data-value="${value}">${name}</div>`);
+        });
 
-
-
-
-
+        $('.chip').on('click', function() {
+            let chip = $(this)
+            let option = $('#id_labels option[value="' + chip.data('value') + '"');
+            option.prop('selected', !option.prop('selected'));
+            chip.toggleClass('selected');
+        });
+    });
+</script>
 {% endblock %}
