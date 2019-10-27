@@ -1,12 +1,13 @@
 from django.views.generic.base import TemplateView, ContextMixin
 from django.views.generic import DetailView
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db.models import Avg, Sum, Count, TextField, DateField, DurationField, F
+from django.db.models import Avg, Sum, Count, TextField, DateField, F
 from django.db.models.functions import Cast, TruncDay
 from django.utils import timezone
+from django.urls import reverse_lazy
+from django.http import JsonResponse
 from datetime import timedelta
 import json
-from collections import OrderedDict
 from tickets.models import Ticket, Pageview, Vote, Comment
 from tickets.views import AuthorOrAdminMixin
 from credits.models import Credit, Debit
@@ -89,7 +90,8 @@ class IndexView(TemplateView, ContextMixin):
         avg_time_to_bugfix = avg_time_taken(Ticket.objects.filter(ticket_type='Bug'), 'created', 'done')
         context['avg_time_to_bugfix'] = interval_string(avg_time_to_bugfix)
         try:
-            context['most_requested_feature_url'] = Ticket.objects.exclude(approved=None, done=None).annotate(votes=Sum('vote__count')).order_by('votes')[0].get_absolute_url()
+            context['most_requested_feature_url'] = Ticket.objects.exclude(approved=None, done=None).annotate(votes=Sum('vote__count')) \
+                .order_by('votes')[0].get_absolute_url()
         except (IndexError, Ticket.DoesNotExist):
             context['most_requested_feature_url'] = None
         return context
@@ -158,8 +160,10 @@ class AllTicketStatsView(PermissionRequiredMixin, TemplateView, DateRangeView):
         context = super(AllTicketStatsView, self).get_context_data(**kwargs)
 
         context['awaiting_approval'] = Ticket.objects.filter(approved=None).count()
-        context['top_5_features'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Feature', done=None).annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
-        context['top_5_bugs'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Bug', done=None).annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
+        context['top_5_features'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Feature', done=None) \
+            .annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
+        context['top_5_bugs'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Bug', done=None) \
+            .annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
 
         chart_data = {}
         chart_data['bugs'] = list(self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Bug')))
@@ -198,11 +202,33 @@ class RoadmapView(TemplateView, ContextMixin):
     View for displaying roadmap with features and bugs with statuses of done and doing.
     '''
     template_name = 'roadmap.html'
+    tickets_per_page = 10
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, page=0, **kwargs):
         context = super(RoadmapView, self).get_context_data(**kwargs)
 
-        context['bugs'] = Ticket.objects.filter(ticket_type='Bug').exclude(doing=None).extra(select={'is_doing': 'done IS NULL'}).extra(order_by=['-is_doing', '-done'])
-        context['features'] = Ticket.objects.filter(ticket_type='Feature').exclude(doing=None).extra(select={'is_doing': 'done IS NULL'}).extra(order_by=['-is_doing', '-done'])
+        no_doing_or_done_tickets = Ticket.objects.exclude(doing=None).count()
+        ticket_selection = Ticket.objects.exclude(doing=None).extra(select={'is_doing': 'done IS NULL'}) \
+            .extra(order_by=['-is_doing', '-done'])[page * self.tickets_per_page:(page + 1) * self.tickets_per_page] \
+            .values('id', 'done', 'title', 'ticket_type')
+
+        def create_roadmap_entry(ticket):
+            return {'title': ticket['title'],
+                    'type': ticket['ticket_type'].lower(),
+                    'url': str(reverse_lazy('ticket', kwargs={'pk': ticket['id']})),
+                    'date': ticket['done'].strftime('%d/%m/%y') if ticket['done'] is not None else 'Coming Soon'}
+
+        context['tickets'] = list(create_roadmap_entry(ticket) for ticket in ticket_selection)
+        context['done'] = no_doing_or_done_tickets < (page + 1) * self.tickets_per_page
 
         return context
+
+    def get(self, request, *args, **kwargs):
+        print(request.content_type)
+        if request.content_type == 'application/json':
+            page = int(self.request.GET['page'])
+            context = self.get_context_data(page=page)
+            data = {'tickets': context['tickets'], 'done': context['done']}
+            return JsonResponse(data, content_type='application/json')
+        else:
+            return super(RoadmapView, self).get(request, *args, **kwargs)

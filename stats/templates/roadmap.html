@@ -4,34 +4,54 @@
 <section class="content">
     <div class="col-12">
         <h1>Roadmap</h1>
-        <h2>Features</h2>
-        <ul>
-        {% for ticket in features %}
-            <li>
-                <a href="{% url 'ticket' pk=ticket.pk %}">
-                    {% if ticket.done %}
-                    {{ ticket.done }} - {{ ticket.title }}
-                    {% else %}
-                    Coming Soon - {{ ticket.title }}
-                    {% endif %}
-                </a>
-            </li>
-        {% endfor %}
-        </ul>
-        <h2>Bugs</h2>
-        <ul>
-        {% for ticket in bugs %}
-            <li>
-                <a href="{% url 'ticket' pk=ticket.pk %}">
-                    {% if ticket.done %}
-                    {{ ticket.done }} - {{ ticket.title }}
-                    {% else %}
-                    Coming Soon - {{ ticket.title }}
-                    {% endif %}
+        <ul id="roadmap" class="roadmap">
+        {% for ticket in tickets %}
+            <li class="roadmap-entry {{ ticket.type }}">
+                <a href="{{ ticket.url }}">
+                    {{ ticket.date }} - {{ ticket.title }}
                 </a>
             </li>
         {% endfor %}
         </ul>
     </div>
+    <div class="col-12">
+        {% if not done %}
+            <button id="load-more" class="btn btn-primary" data-page="1">
+                Load More
+            </button>
+        {% endif %}
+    </div>
 </section>
+{% endblock %}
+{% block javascript %}
+    <script>
+        $(function() {
+            $('#load-more').on('click', function() {
+                let button = $(this);
+                if (!button.hasClass('disabled')) {
+                    button.addClass('disabled').html('<span class="spinner-border spinner-border-sm hidden" role="status"></span> Loading...')
+                    $.ajax({url: '?page=' + button.data('page'), type: 'GET', contentType: 'application/json'})
+                     .done(function(result) {
+                        let roadmap = $('#roadmap');
+                        result.tickets.forEach(function(ticket) {
+                            roadmap.append(`
+                            <li class="roadmap-entry ${ticket.type}">
+                                <a href="${ticket.url}">
+                                    ${ticket.date} - ${ticket.title}
+                                </a>
+                            </li>`);
+                        });
+                        if (result.done) button.fadeOut();
+                        else {
+                            button.data('page', 2).removeClass('disabled').html('Load More');
+                        }
+                     })
+                     .fail(function(result) {
+                            console.log(result);
+                            button.addClass('btn-warning').removeClass('btn-primary').html('Oops... Something went wrong!');
+                     });
+                }
+            });
+        });
+    </script>
 {% endblock %}
