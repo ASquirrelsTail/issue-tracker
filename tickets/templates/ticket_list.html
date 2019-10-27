@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% load bootstrap4 %}
 {% block title %}Tickets{% endblock %}
 {% block content %}
@@ -20,8 +21,12 @@
                             {% bootstrap_form filter_form exclude="labels" %}
                         </div>
                         <div class="col-12 col-lg-6">
+                            <p class="fake-label" aria-hidden="true">Labels</p>
+                            <div id="label-chips" class="chips" aria-hidden="true"></div>
                             {% bootstrap_field filter_form.labels form_group_class="sr-only" %}
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col-12">
                             {% buttons %}
                             <button type="submit" class="btn btn-primary">Filter</button>
@@ -105,6 +110,7 @@
 </article>
 {% endblock %}
 {% block javascript %}
+<script src="{% static 'js/main.js' %}" type="text/javascript"></script>
 <script>
     $(function() {       
         // When the replies are opened and closed, change the -/+ indicator, and hide/show the reply button
@@ -113,22 +119,9 @@
         }).on('hidden.bs.collapse', function() {
             $('.filter-toggle span').text('[+]');
         });
-
-        $('#id_labels option').each(function() {
-            let option = $(this);
-            let name = option.text();
-            let value = option.attr('value');
-            let selected = option.prop('selected') ? 'selected' : null;
-            $('#id_labels').parent().parent().append('<div id="label-chips" class="chips" aria-hidden="true"></div>')
-            $('#label-chips').append(`<div class="chip ${selected}" data-value="${value}">${name}</div>`);
-        });
-
-        $('.chip').on('click', function() {
-            let chip = $(this)
-            let option = $('#id_labels option[value="' + chip.data('value') + '"');
-            option.prop('selected', !option.prop('selected'));
-            chip.toggleClass('selected');
-        });
+        
+        // Create chips to mirror the select box for the labels filters.
+        selectToChips('id_labels', 'label-chips');
     });
 </script>
 {% endblock %}

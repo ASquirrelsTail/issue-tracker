@@ -58,6 +58,10 @@ class Ticket(models.Model):
             return 'Ticket'
 
     @property
+    def selected_labels(self):
+        return self.labels.all()
+
+    @property
     def no_views(self):
         return self.pageview_set.all().count()
 

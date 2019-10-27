@@ -9,6 +9,7 @@
             {% csrf_token %}
             {% buttons %}
             <button type="submit" class="btn btn-danger">Confirm Delete</button>
+            <a href="{% url 'labels' %}" class="btn btn-warning">Cancel</a>
             {% endbuttons %}
         </form>
     </div>
