@@ -219,7 +219,8 @@ class RoadmapView(TemplateView, ContextMixin):
                     'date': ticket['done'].strftime('%d/%m/%y') if ticket['done'] is not None else 'Coming Soon'}
 
         context['tickets'] = list(create_roadmap_entry(ticket) for ticket in ticket_selection)
-        context['done'] = no_doing_or_done_tickets < (page + 1) * self.tickets_per_page
+        context['done'] = no_doing_or_done_tickets - 1 < (page + 1) * self.tickets_per_page
+        print(no_doing_or_done_tickets)
 
         return context
 

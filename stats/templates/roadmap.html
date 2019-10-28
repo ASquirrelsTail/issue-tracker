@@ -6,15 +6,15 @@
         <h1>Roadmap</h1>
         <ul id="roadmap" class="roadmap">
         {% for ticket in tickets %}
-            <li class="roadmap-entry {{ ticket.type }}">
+            <li class="roadmap-entry {{ ticket.type }}{% if ticket.date == 'Coming Soon' %} coming-soon{% endif %}">
                 <a href="{{ ticket.url }}">
-                    {{ ticket.date }} - {{ ticket.title }}
+                    {{ ticket.date }} - {{ ticket.title }}<span class="sr-only"> - {{ ticket.type }}</span>
                 </a>
             </li>
         {% endfor %}
         </ul>
     </div>
-    <div class="col-12">
+    <div class="col-12 text-lg-center">
         {% if not done %}
             <button id="load-more" class="btn btn-primary" data-page="1">
                 Load More
@@ -34,16 +34,17 @@
                      .done(function(result) {
                         let roadmap = $('#roadmap');
                         result.tickets.forEach(function(ticket) {
+                            let comingSoon = ticket.date === 'Coming Soon' ? ' coming-soon' : '';
                             roadmap.append(`
-                            <li class="roadmap-entry ${ticket.type}">
+                            <li class="roadmap-entry ${ticket.type}${comingSoon}">
                                 <a href="${ticket.url}">
-                                    ${ticket.date} - ${ticket.title}
+                                    ${ticket.date} - ${ticket.title}<span class="sr-only"> - ${ticket.type}</span>
                                 </a>
                             </li>`);
                         });
                         if (result.done) button.fadeOut();
                         else {
-                            button.data('page', 2).removeClass('disabled').html('Load More');
+                            button.data('page', button.data('page') + 1).removeClass('disabled').html('Load More');
                         }
                      })
                      .fail(function(result) {
