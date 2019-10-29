@@ -96,7 +96,7 @@ class TicketsListView(ListView):
 
         context['no_tickets'] = self.get_queryset().count()
 
-        context['filter_form'] = self.form
+        context['filter_form'] = self.form if self.form.has_changed() else FilterForm()
 
         return context
 

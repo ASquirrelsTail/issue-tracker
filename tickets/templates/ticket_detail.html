@@ -74,7 +74,7 @@
                     {% endif %}
                     {% if object.user == user or perms.tickets.can_edit_all_tickets %}
                     <a href="{% url 'edit-ticket' pk=object.id %}" class="btn btn-warning">Edit Ticket</a>
-                    <a href="{% url 'delete-ticket' pk=object.id %}" class="btn btn-danger">Delete Ticket</a>
+                    <a href="{% url 'delete-ticket' pk=object.id %}" class="btn btn-danger btn-delete">Delete Ticket</a>
                     {% endif %}
                 </div>
             </div>
@@ -142,7 +142,10 @@
                 <div>
                     <form action="{% url 'add-reply' ticket_pk=object.id comment_pk=comment.id %}" method="post">
                         {% csrf_token %}
-                        {% bootstrap_form comment_form %}
+                        <div class="form-group">
+                            <label for="reply_{{ comment.id }}_content">Comment</label>
+                            <textarea id="reply_{{ comment.id }}_content" name="content" cols="40" rows="4" class="form-control" placeholder="Comment" title="" required ></textarea>
+                        </div>
                         {% buttons %}
                         <button type="submit" class="btn btn-primary">Add Reply</button>
                         {% endbuttons %}
@@ -194,6 +197,31 @@
     </div>
 </div>
 {% endif %}
+<!-- Delete Modal -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure?</p>
+                <form id="confirmDelete" method="POST">
+                    {% csrf_token %}
+                    {% buttons %}
+                    <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                    <a href="{{ object.get_absolute_url }}" data-dismiss="modal" class="btn btn-warning">Cancel</a>
+                    {% endbuttons %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 {% block javascript %}
 <script>
@@ -212,6 +240,14 @@
         // Focus the reply textarea when the reply to button is pressed and replies accordion has opened
         $('.btn-reply-to').on('click', function() {
             $($(this).attr('href')).one('shown.bs.collapse', function() {$(this).find('textarea')[0].focus();});
+        });
+        
+        // Redirect all delete buttons to a delete confirmation modal that posts confirmation, instead of directing the user to a new page to confirm deletion.
+        $('.btn-delete').on('click', function(e) {
+            e.preventDefault();
+            $('#deleteModalLabel').text($(this).text());
+            $('#confirmDelete').attr('action', $(this).attr('href'));
+            $('#deleteModal').modal('show');
         });
 
         // If the user has been directed to a reply or reply-to form, open the reply thread on load and scroll to it.

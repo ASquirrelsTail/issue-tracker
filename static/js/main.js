@@ -16,3 +16,10 @@ function selectToChips(selectID, chipsID) {
         chip.toggleClass('selected');
     });
 }
+
+$(function() {
+    // Refocus on the username input when the login modal is shown
+    $('#loginModal').on('shown.bs.modal', function() {
+        $(this).find('#id_username')[0].focus();
+    });
+});

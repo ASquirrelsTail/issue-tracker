@@ -102,6 +102,12 @@ a:hover {
 	border-color: #0099cc;
 }
 
+/* FORMS */
+
+.form-control.is-valid, .was-validated .form-control:valid {
+	background-image: none;
+}
+
 /* CHIPS */
 
 .fake-label {
