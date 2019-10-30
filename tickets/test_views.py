@@ -914,7 +914,7 @@ class CommentViewsTestCase(TestCase):
         '''
         test_comment = Comment(user=self.other_user, ticket=self.test_ticket2, content='A test parent comment.')
         test_comment.save()
-        test_comment = Comment.objects.get(content='A test parent comment.')
+        test_comment = Comment.objects.get(id=test_comment.id)
 
         self.client.login(username='TestUser', password='tH1$isA7357')
         response = self.client.post('/tickets/2/comments/{}/reply/'.format(test_comment.id),
@@ -930,7 +930,7 @@ class CommentViewsTestCase(TestCase):
         '''
         test_comment = Comment(user=self.other_user, ticket=self.test_ticket2, content='A comment on ticket 2.')
         test_comment.save()
-        test_comment = Comment.objects.get(content='A comment on ticket 2.')
+        test_comment = Comment.objects.get(id=test_comment.id)
 
         self.client.login(username='TestUser', password='tH1$isA7357')
         response = self.client.get('/tickets/1/comments/{}/reply/'.format(test_comment.id))
@@ -943,11 +943,11 @@ class CommentViewsTestCase(TestCase):
     def test_get_post_reply_add_comment_reply_to_reply_fails(self):
         test_comment = Comment(user=self.other_user, ticket=self.test_ticket2, content='A primary comment on ticket 2.')
         test_comment.save()
-        test_comment = Comment.objects.get(content='A primary comment on ticket 2.')
+        test_comment = Comment.objects.get(id=test_comment.id)
         test_reply = Comment(user=self.other_user, ticket=self.test_ticket2,
                              reply_to=test_comment, content='A reply to comment on ticket 2.')
         test_reply.save()
-        test_reply = Comment.objects.get(content='A reply to comment on ticket 2.')
+        test_reply = Comment.objects.get(id=test_reply.id)
 
         self.client.login(username='TestUser', password='tH1$isA7357')
         response = self.client.get('/tickets/2/comments/{}/reply/'.format(test_reply.id))
@@ -964,7 +964,7 @@ class CommentViewsTestCase(TestCase):
         '''
         test_comment = Comment(user=self.test_user, ticket=self.test_ticket2, content='A comment by TestUser.')
         test_comment.save()
-        test_comment = Comment.objects.get(content='A comment by TestUser.')
+        test_comment = Comment.objects.get(id=test_comment.id)
 
         response = self.client.get('/tickets/2/comments/{}/edit/'.format(test_comment.id))
         self.assertEqual(response.status_code, 403)
@@ -991,7 +991,7 @@ class CommentViewsTestCase(TestCase):
         '''
         test_comment = Comment(user=self.test_user, ticket=self.test_ticket2, content='Another comment by TestUser.')
         test_comment.save()
-        test_comment = Comment.objects.get(content='Another comment by TestUser.')
+        test_comment = Comment.objects.get(id=test_comment.id)
 
         response = self.client.post('/tickets/2/comments/{}/edit/'.format(test_comment.id), {'content': 'It\'s edited!'})
         self.assertEqual(response.status_code, 403)
@@ -1007,10 +1007,76 @@ class CommentViewsTestCase(TestCase):
         '''
         test_comment = Comment(user=self.test_user, ticket=self.test_ticket2, content='A final comment by TestUser.')
         test_comment.save()
-        test_comment = Comment.objects.get(content='A final comment by TestUser.')
+        test_comment = Comment.objects.get(id=test_comment.id)
 
         self.client.login(username='TestUser', password='tH1$isA7357')
         response = self.client.post('/tickets/2/comments/{}/edit/'.format(test_comment.id), {'content': 'Successfully edited!'})
         self.assertEqual(Comment.objects.get(pk=test_comment.id).content, 'Successfully edited!')
         self.assertTrue(Comment.objects.get(pk=test_comment.id).edited)
         self.assertRedirects(response, Comment.objects.get(pk=test_comment.id).get_absolute_url())
+
+    def test_get_delete_comment(self):
+        '''
+        The delete comment view should return 403 for anyone taht isn;t the author or admin,
+        and render the delete_comment.html template.
+        '''
+
+        test_comment = Comment(user=self.test_user, ticket=self.test_ticket2, content='A comment to delete by TestUser.')
+        test_comment.save()
+        test_comment = Comment.objects.get(id=test_comment.id)
+
+        response = self.client.get('/tickets/2/comments/{}/delete/'.format(test_comment.id))
+        self.assertEqual(response.status_code, 403)
+
+        self.client.login(username='OtherUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/2/comments/{}/delete/'.format(test_comment.id))
+        self.assertEqual(response.status_code, 403)
+        self.client.logout()
+
+        self.client.login(username='AdminUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/2/comments/{}/delete/'.format(test_comment.id))
+        self.assertEqual(response.status_code, 200)
+        self.client.logout()
+
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        response = self.client.get('/tickets/2/comments/{}/delete/'.format(test_comment.id))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'delete_comment.html')
+
+    def test_post_delete_comment_anonymous_forbidden(self):
+        '''
+        Post requests for unauthorised users should return 403, and not delete the comment
+        '''
+        test_comment = Comment(user=self.test_user, ticket=self.test_ticket2, content='A comment to fail to delete by TestUser.')
+        test_comment.save()
+        test_comment = Comment.objects.get(id=test_comment.id)
+
+        response = self.client.post('/tickets/2/comments/{}/edit/'.format(test_comment.id), {})
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Comment.objects.get(id=test_comment.id))
+
+        self.client.login(username='OtherUser', password='tH1$isA7357')
+        response = self.client.post('/tickets/2/comments/{}/edit/'.format(test_comment.id), {})
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Comment.objects.get(id=test_comment.id))
+
+    def test_post_delete_comment_deletes_comment(self):
+        '''
+        Post requests to delete comment should delete the comment, and any replies, then redirect to the ticket page.
+        '''
+        test_comment = Comment(user=self.test_user, ticket=self.test_ticket2, content='A comment to reply to then delete by TestUser.')
+        test_comment.save()
+        test_comment = Comment.objects.get(id=test_comment.id)
+
+        test_reply = Comment(user=self.other_user, ticket=self.test_ticket2,
+                             reply_to=test_comment, content='A reply to delete as well.')
+        test_reply.save()
+        test_reply = Comment.objects.get(id=test_reply.id)
+
+        self.client.login(username='TestUser', password='tH1$isA7357')
+        response = self.client.post('/tickets/2/comments/{}/delete/'.format(test_comment.id), {})
+        with self.assertRaises(Comment.DoesNotExist):
+            Comment.objects.get(id=test_comment.id)
+        with self.assertRaises(Comment.DoesNotExist):
+            Comment.objects.get(id=test_reply.id)
+        self.assertRedirects(response, self.test_ticket2.get_absolute_url())
