@@ -182,6 +182,10 @@ class Comment(models.Model):
         return reverse('ticket', kwargs={'pk': self.ticket.pk}) + url_fragment.format(self.pk)
 
     @property
+    def noun(self):
+        return 'reply' if self.reply_to is not None else 'comment'
+
+    @property
     def replies(self):
         return self.reply_to_set.all()
 

@@ -312,6 +312,19 @@ class EditCommentView(AuthorOrAdminMixin, UpdateView):
         form.instance.edited = timezone.now()
         return super(EditCommentView, self).form_valid(form)
 
+
+class DeleteCommentView(AuthorOrAdminMixin, DeleteView):
+    '''
+    View to delete comment.
+    '''
+    permission_required = 'tickets.can_edit_all_comments'
+    model = Comment
+    template_name = 'delete_comment.html'
+
+    def get_success_url(self):
+        messages.success(self.request, 'Successfully deleted {}.'.format(self.object.noun))
+        return self.object.ticket.get_absolute_url()
+
 # LABEL VIEWS #
 
 

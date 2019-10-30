@@ -103,6 +103,7 @@
             {% endif %}
             {% if comment.user == user or perms.tickets.can_edit_all_comments %}
             <a href="{% url 'edit-comment' ticket_pk=object.id pk=comment.id %}" class="btn btn-warning">Edit Comment</a>
+            <a href="{% url 'delete-comment' ticket_pk=object.id pk=comment.id %}" class="btn btn-danger btn-delete">Delete Comment</a>
             {% endif %}
         </div>
         <div class="col-lg-4 col-12 order-lg-1 order-3">
@@ -131,6 +132,7 @@
                         {% endif %}
                         {% if reply.user == user or perms.tickets.can_edit_all_comments %}
                         <a href="{% url 'edit-comment' ticket_pk=object.id pk=reply.id %}" class="btn btn-warning">Edit Reply</a>
+                        <a href="{% url 'delete-comment' ticket_pk=object.id pk=reply.id %}" class="btn btn-danger btn-delete">Delete Reply</a>
                         {% endif %}
                     </div>
                 </div>
