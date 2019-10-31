@@ -15,13 +15,20 @@
     {% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Wish Machine</a>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light align-items-lg-start">
+        <a class="navbar-brand" href="{% url 'index' %}">
+            <img src="{% static 'images/unicorn.png' %}" alt="Unicorn Attractor Logo" class="logo">
+            <div class="brand-titles d-none d-sm-inline-block">
+                <span class="brand-name">Wish Machine</span>
+                <span class="brand-strapline">Where dreams come true!</span>
+            </div>
+        </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
+        <div class="collapse navbar-collapse justify-content-lg-end flex-wrap" id="navbarNav">
+            <hr class="d-lg-none">
+            <ul class="navbar-nav navbar-nav-main order-lg-2">
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'index' %}">Home</a>
                 </li>
@@ -35,6 +42,17 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'add-bug' %}">Report Bug</a>
                 </li>
+            </ul>
+            <hr class="d-lg-none">
+            <ul class="navbar-nav user-details col-lg-12 order-lg-1 justify-content-lg-end">
+                <li class="nav-item">
+                    <span>Logged in as {{ user }}</span>
+                </li>
+                {% if perms.tickets.can_view_all_stats %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'all_ticket_stats' %}">Stats</a>
+                </li>
+                {% endif %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
                 </li>
@@ -44,6 +62,9 @@
                 </li>
                 {% endif %}
                 {% else %}
+            </ul>
+            <hr class="d-lg-none">
+            <ul class="navbar-nav user-details col-lg-12 order-lg-1 justify-content-lg-end">
                 {% if login_form %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'login' %}" data-toggle="modal" data-target="#loginModal">Log In</a>

@@ -145,6 +145,51 @@ a:hover {
 	margin-bottom: 0.5rem;
 }
 
+/* HEADER */
+
+.navbar-brand {
+	display: flex;
+	justify-content: center;
+	flex-grow: 1;
+}
+
+.navbar-brand .logo {
+	width: 90px;
+	height: auto;
+}
+
+.brand-name {
+	display: block;
+	font-size: 2em;
+	font-weight: 900;
+	line-height: 0.7em;
+	margin-top: 0.6em;
+}
+
+.brand-strapline {
+	margin-left: 1.5em;
+	transform: translate(0, -10px);
+}
+
+.navbar-nav-main {
+	font-size: 1.25em;
+	font-weight: 600;
+}
+
+.nav-item span {
+	display: block;
+	padding: 0.5rem 0;
+}
+
+@media only screen and (min-width: 992px) {
+	.navbar-brand {
+		flex-grow: 0;
+	}
+	.nav-item span {
+		padding: 0.5rem 0.5rem;
+	}
+}
+
 /* HOME PAGE */
 
 .squares .col-12{
