@@ -90,7 +90,7 @@ class IndexView(TemplateView, ContextMixin):
         avg_time_to_bugfix = avg_time_taken(Ticket.objects.filter(ticket_type='Bug'), 'created', 'done')
         context['avg_time_to_bugfix'] = interval_string(avg_time_to_bugfix)
         try:
-            context['most_requested_feature_url'] = Ticket.objects.exclude(approved=None, done=None).annotate(votes=Sum('vote__count')) \
+            context['most_requested_feature_url'] = Ticket.objects.exclude(approved=None).filter(done=None).annotate(votes=Sum('vote__count')) \
                 .order_by('votes')[0].get_absolute_url()
         except (IndexError, Ticket.DoesNotExist):
             context['most_requested_feature_url'] = None
@@ -120,6 +120,8 @@ class DateRangeView(ContextMixin):
     def get_context_data(self, **kwargs):
         self.get_form_kwargs()
         context = super(DateRangeView, self).get_context_data(**kwargs)
+        context['date_range'] = 'For This Week' if not self.form.has_changed() else \
+            'Between {:%d/%m/%y}-{:%d/%m/%y}'.format(self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
         context['date_range_form'] = self.form
 
         return context
@@ -161,9 +163,9 @@ class AllTicketStatsView(PermissionRequiredMixin, TemplateView, DateRangeView):
 
         context['awaiting_approval'] = Ticket.objects.filter(approved=None).count()
         context['top_5_features'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Feature', done=None) \
-            .annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
+            .annotate(votes=Sum('vote__count')).order_by('votes')[:5]
         context['top_5_bugs'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Bug', done=None) \
-            .annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
+            .annotate(votes=Sum('vote__count')).order_by('votes')[:5]
 
         chart_data = {}
         chart_data['bugs'] = list(self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Bug')))
