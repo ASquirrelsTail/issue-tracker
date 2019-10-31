@@ -7,9 +7,11 @@ from django.urls import reverse_lazy
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
+from datetime import timedelta
 import json
 from credits.forms import GetCreditsForm
 from credits.models import PaymentIntent, Credit
@@ -71,8 +73,9 @@ class RefundView(HasWalletMixin, SingleObjectMixin, TemplateView, View):
         '''
         Gets the most recent unrefunded transaction.
         '''
+        last_90_days = timezone.now().date() - timedelta(days=90)
         try:
-            self.object = self.request.user.wallet.credit_set.filter(refunded=False, real_value__gte=1).order_by('-created')[0]
+            self.object = self.request.user.wallet.credit_set.filter(refunded=False, real_value__gte=1, created__gt=last_90_days).order_by('-created')[0]
         except Credit.DoesNotExist:
             self.object = None
 

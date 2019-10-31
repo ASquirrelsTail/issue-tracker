@@ -147,6 +147,10 @@ a:hover {
 
 /* HEADER */
 
+.navbar {
+	background-color: white;
+}
+
 .navbar-brand {
 	display: flex;
 	justify-content: center;
@@ -174,11 +178,21 @@ a:hover {
 .navbar-nav-main {
 	font-size: 1.25em;
 	font-weight: 600;
+	align-items: center;
+	text-align: center;
 }
 
 .nav-item span {
 	display: block;
 	padding: 0.5rem 0;
+}
+
+@media only screen and (min-width: 576px) {
+	.navbar {
+		border-radius: 1rem;
+		margin: 0.5rem;
+		margin-bottom: 0;
+	}
 }
 
 @media only screen and (min-width: 992px) {

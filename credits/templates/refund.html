@@ -7,6 +7,8 @@
 {% if transaction is not None %}
     {% if transaction.can_refund %}
         <h1>Refund {{ transaction.amount }} credits for {{ refund_value }}</h1>
+        <p>On {{ object.created|date:'d/m/y H:i' }}</p>
+        <p>You can refund your last transaction up to 90 days after making the payment. Refunds will take between 5 and 10 days business days to appear on your statment</p>
         <form method="POST">
             {% csrf_token %}
             {% buttons %}

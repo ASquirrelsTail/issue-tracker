@@ -4,7 +4,9 @@
 <section class="content">
     <div class="col-12">
         <h1>Credits: {{ wallet_balance }}</h1>
+        <p>You can use credits to vote for new features. Spending credits is a great way to support the development of Unicorn Attractor, while also having your say in the direction the game takes.</p>
         <a href="{% url 'get_credits' %}" class="btn btn-primary">Get more credits</a>
+        <a href="{% url 'refund_credits' %}" class="btn btn-warning">Request Refund</a>
     </div>
 </section>
 {% endblock %}

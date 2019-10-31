@@ -65,10 +65,13 @@ class Credit(Transaction):
         if self.can_refund:
             try:
                 refund = stripe.Refund.create(charge=self.stripe_transaction_id)
-                self.wallet.debit(self.amount, refund['amount'])
-                self.refunded = True
-                self.save()
-                return (refund['status'], refund['amount'])
+                if refund['status'] == 'succeeded':
+                    self.wallet.debit(self.amount, refund['amount'])
+                    self.refunded = True
+                    self.save()
+                    return (refund['status'], refund['amount'])
+                else:
+                    return (False, 0)
             except stripe.error.StripeError:
                 return (False, 0)
         else:
