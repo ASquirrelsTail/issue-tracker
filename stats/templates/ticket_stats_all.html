@@ -29,11 +29,11 @@
         <div id="chart" class="col-12 order-1"></div>
         <div id="pie" class="col-12 col-md-6 col-lg-4 col-xl-3 order-3"></div>
         <div class="col-12 col-md-6 col-lg-8 col-xl-9 order-2 order-md-4">
-            <span class="key key-blue">Features</span>
-            <span class="key key-pink">Bugs</span>
-            <span class="key key-orange">Votes</span>
-            <span class="key key-green">Comments</span>
-            <span class="key key-purple">Views</span>
+            <span class="key key-blue"><span id="total-features"></span> New feature requests</span>
+            <span class="key key-pink"><span id="total-bugs"></span> New bug reports</span>
+            <span class="key key-orange"><span id="total-votes"></span> Votes</span>
+            <span class="key key-green"><span id="total-comments"></span> Comments</span>
+            <span class="key key-purple"><span id="total-views"></span> Views</span>
         </div>
     </div>
 </section>
@@ -100,6 +100,9 @@
             let pie = createPieChart('pie', ndx,
                                      [{name: 'features', color: colors.blue},
                                       {name: 'bugs', color: colors.pink}]);
+
+            createTotalCounts(ndx, '#total-', ['features', 'bugs', 'comments', 'views', 'votes']);
+
 
             dc.renderAll();
         });

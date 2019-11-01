@@ -129,6 +129,15 @@ function createPieChart(chartID, ndx, keys) {
     pie.onClick = () => false; //Remove onClick from pie charts, so they can't trigger filtering
 }
 
+function createTotalCounts(ndx, prefix, keys) {
+    let typeDim = ndx.dimension(dc.pluck('type'));
+    let typeGroup = reduceCountByGroup(typeDim, keys);
+    let typeTotals = typeGroup.all();
+    keys.forEach((key) => {
+        $(prefix + key).text(typeTotals.find((item) => item.key === key).value);
+    });
+}
+
 $(() => {
     $(window).on('resize', () => {
         dc.renderAll();
