@@ -90,8 +90,8 @@ class IndexView(TemplateView, ContextMixin):
         avg_time_to_bugfix = avg_time_taken(Ticket.objects.filter(ticket_type='Bug'), 'created', 'done')
         context['avg_time_to_bugfix'] = interval_string(avg_time_to_bugfix)
         try:
-            context['most_requested_feature_url'] = Ticket.objects.exclude(approved=None).filter(done=None).annotate(votes=Sum('vote__count')) \
-                .order_by('votes')[0].get_absolute_url()
+            context['most_requested_feature_url'] = Ticket.objects.exclude(approved=None).filter(done=None, ticket_type='Feature').annotate(votes=Sum('vote__count')) \
+                .order_by('-votes')[0].get_absolute_url()
         except (IndexError, Ticket.DoesNotExist):
             context['most_requested_feature_url'] = None
         return context
