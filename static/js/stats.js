@@ -82,7 +82,10 @@ function createCompositeChart(chartID, ndx, groups) {
     
     // If the date range has been set by the user, use that range for the chart, otherwise use defaults.
     if ($('#id_start_date').val() != '') minDate = d3.time.format('%Y-%m-%d').parse($('#id_start_date').val());
-    else minDate = new Date(dateDim.bottom(1)[0].date - 86400000)
+    else {
+        let today = new Date(); // Sort this mess!
+        minDate = new Date(today.setDate(today.getDate() - 7)).setHours(0,0,0,0);
+    }
     if ($('#id_end_date').val() != '') maxDate = d3.time.format('%Y-%m-%d').parse($('#id_end_date').val());
     else maxDate = new Date().setHours(0,0,0,0);
     

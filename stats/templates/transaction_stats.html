@@ -8,14 +8,27 @@
 {% block content %}
 <section class="content">
     <div class="col-12">
-        <h1>All transaction stats</h1>
+        <h1>transaction stats {{ date_range }}</h1>
         <form action="" method="GET">
-            {% bootstrap_form date_range_form %}
-            {% buttons %}
-            <button type="submit" class="btn btn-primary">Filter</button>
-            {% endbuttons %}
+            <div class="row">
+                <div class="col-12 col-md-6">
+                    {% bootstrap_field date_range_form.start_date%}
+                </div>
+                <div class="col-12 col-md-6">
+                    {% bootstrap_field date_range_form.end_date%}
+                </div>
+                <div class="col-12">
+                    {% buttons %}
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                    {% endbuttons %}
+                </div>
+            </div>
         </form>
         <div id="chart" class="col-sm-12"></div>
+        <div class="col-12">
+            <span class="key key-green">£<span id="total-credit"></span> Credit</span>
+            <span class="key key-pink">£<span id="total-debit"></span> Debit</span>
+        </div>
     </div>
 </section>
 {% endblock %}
@@ -44,6 +57,9 @@
                                              [{name: 'credit', color: colors.green, title: makeTitle},
                                               {name: 'debit', color: colors.pink, title: makeTitle}]);
             chart.yAxisLabel('£', 25);
+
+            createTotalCounts(ndx, '#total-', ['credit', 'debit']);
+
             dc.renderAll();
         });
 
