@@ -5,31 +5,27 @@
 <article class="row content">
     <div class="col-12">
             <h1>{{ object }}</h1>
-            <h2{% if object.status == 'awaiting approval' %} class="alert alert-warning"{% endif %}>{{ object.status|capfirst }}</h2>
-            {% if perms.tickets.can_update_ticket_status %}
-                {% if object.approved is None %}
-                    <form action="{% url 'approve-ticket' pk=object.id %}" method="post">
-                        {% csrf_token %}
-                        {% buttons %}
-                        <button type="submit" class="btn btn-primary">Approve</button>
-                        {% endbuttons %}
-                    </form>
-                {% elif object.doing is None %}
-                    <form action="{% url 'doing-ticket' pk=object.id %}" method="post">
-                        {% csrf_token %}
-                        {% buttons %}
-                        <button type="submit" class="btn btn-primary">Doing</button>
-                        {% endbuttons %}
-                    </form>
-                {% elif object.done is None %}
-                    <form action="{% url 'done-ticket' pk=object.id %}" method="post">
-                        {% csrf_token %}
-                        {% buttons %}
-                        <button type="submit" class="btn btn-primary">Done</button>
-                        {% endbuttons %}
-                    </form>
+            <div class="col-12{% if object.status == 'awaiting approval' %} alert alert-warning{% endif %}">
+                <h2 class="d-inline-block">{{ object.status|capfirst }}</h2>
+                {% if perms.tickets.can_update_ticket_status %}
+                    {% if object.approved is None %}
+                        <form class="d-inline-block" action="{% url 'approve-ticket' pk=object.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">Approve</button>
+                        </form>
+                    {% elif object.doing is None %}
+                        <form class="d-inline-block" action="{% url 'doing-ticket' pk=object.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">Doing</button>
+                        </form>
+                    {% elif object.done is None %}
+                        <form class="d-inline-block" action="{% url 'done-ticket' pk=object.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">Done</button>
+                        </form>
+                    {% endif %}
                 {% endif %}
-            {% endif %}
+            </div>
             <p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
             {% if object.approved and not object.done %}
             {% if not has_voted or object.ticket_type == 'Feature' %}
@@ -45,13 +41,15 @@
                     {% endbuttons %}
                 </form>
                 {% else %}
-                <a href="{% url 'get_credits' %}" class="btn btn-primary">Get more credits to vote for this {{ object.noun }}</a> 
+                    {% if not perms.credits.cant_have_wallet %}
+                    <a href="{% url 'get_credits' %}" class="btn btn-primary">Get more credits to vote for this {{ object.noun }}</a> 
+                    {% endif %}
                 {% endif %}
                 {% else %}
                 <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Log in to vote for this {{ object.noun }}</a>   
                 {% endif %}
             {% else %}
-            <p>You have already voted.</p>
+            <!-- <p>You have already voted.</p> -->
             {% endif %}
             {% endif %}
             {{ object.content|linebreaks }}

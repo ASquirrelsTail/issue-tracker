@@ -1,4 +1,4 @@
-# Cookbook
+# Issue Tracker
 
 Full Stack Frameworks With Django Milestone Project - Code Institute
 
@@ -26,8 +26,6 @@ A full breakdown of the UX process can be found [here](https://github.com/ASquir
 - CSS3
 - JavaScript
 - Python3
-- [Sass](https://sass-lang.com/)
-	- Sass was used to preprocess and compile stylesheets for the site.
 - [Django 1.11.21](https://www.djangoproject.com/)
 	- The Django framework serves the site over HTTP as well as handling user authentication and providing a powerful ORM for data storage and access.
 
@@ -44,7 +42,7 @@ A full breakdown of the UX process can be found [here](https://github.com/ASquir
 - [GIMP 2.10.8](https://www.gimp.org/)
 	- GIMP 2 was used for image editing.
 - [Inkscape](https://inkscape.org/)
-	- Inkscape was used to create the logo and additional icons for the site.
+	- Inkscape was used to create the logo.
 
 ## Deployment
 
