@@ -103,6 +103,11 @@ a:hover {
 	color: #6d3b00;
 }
 
+/* TOASTS */
+
+.toast-container {
+	z-index: 999;
+}
 
 /* PAGINATION */
 
@@ -400,7 +405,7 @@ li.roadmap-entry.coming-soon {
 /* STATS PAGE */
 
 .key {
-	display: inline-block;
+	display: block;
 	padding: 0.25rem;
 	margin-left: 1rem;
 }
@@ -434,4 +439,24 @@ li.roadmap-entry.coming-soon {
 
 .key-purple:before {
 	background-color: #ae81ff;
+}
+
+
+.dc-chart .pie-slice {
+	cursor: default;
+}
+
+.dc-chart .pie-slice path {
+	stroke: white;
+	stroke-width: 0.5rem;
+	stroke-linejoin: round;
+}
+
+.dc-chart .pie-label-group text, .dc-chart .pie-slice title {
+	text-transform: capitalize;
+}
+
+.dc-chart path.line {
+	stroke-width: 0.25rem;
+	stroke-linejoin: round;
 }

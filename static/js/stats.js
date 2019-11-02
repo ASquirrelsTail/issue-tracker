@@ -95,6 +95,7 @@ function createCompositeChart(chartID, ndx, groups) {
          .transitionDuration(500)
          .shareTitle(false)
          .x(d3.time.scale().domain([minDate, maxDate]))
+         .yAxisPadding('10%')
          .yAxis().ticks(4);
     
     // Add line charts for each group.
@@ -103,8 +104,8 @@ function createCompositeChart(chartID, ndx, groups) {
     return chart;
 }
 
-function reduceCountByGroup(dimension, keys) {
-    fullGroup = dimension.group().reduceCount().all();
+function reduceTotalByGroup(dimension, keys) {
+    fullGroup = dimension.group().reduceSum((d) => d.total).all();
 
     return {
         all() {
@@ -122,28 +123,31 @@ function createPieChart(chartID, ndx, keys) {
     let pie = dc.pieChart('#' + chartID);
 
     let typeDim = ndx.dimension(dc.pluck('type'));
-    let typeGroup = reduceCountByGroup(typeDim, keys.map(group => group.name));
+    let typeGroup = reduceTotalByGroup(typeDim, keys.map(group => group.name));
 
     pie.dimension(typeDim)
        .group(typeGroup)
+       .title((d) => `${d.value} ${d.key}`)
        .colorAccessor((d) => keys.findIndex(key => key.name === d.key))
        .colors(keys.map(key => key.color));
 
     pie.onClick = () => false; //Remove onClick from pie charts, so they can't trigger filtering
 }
 
-function createTotalCounts(ndx, prefix, keys) {
+function createTotalCounts(ndx, prefix, keys, decimals=0) {
     let typeDim = ndx.dimension(dc.pluck('type'));
-    let typeGroup = reduceCountByGroup(typeDim, keys);
+    let typeGroup = reduceTotalByGroup(typeDim, keys);
     let typeTotals = typeGroup.all();
     keys.forEach((key) => {
-        $(prefix + key).text(typeTotals.find((item) => item.key === key).value);
+        $(prefix + key).text(typeTotals.find((item) => item.key === key).value.toFixed(decimals));
     });
 }
 
 $(() => {
+    // Set up date pickers
+    $('.datepicker input').datepicker({dateFormat: 'yy-mm-dd'});
+
     $(window).on('resize', () => {
         dc.renderAll();
-        console.log('resizing');
     });
 });

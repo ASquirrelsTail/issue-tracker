@@ -4,30 +4,39 @@
 {% block title %}All transaction stats{% endblock %}
 {% block head %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/libs/dc.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/libs/jquery-ui.css' %}">
 {% endblock %}
 {% block content %}
 <section class="content">
     <div class="col-12">
-        <h1>transaction stats {{ date_range }}</h1>
-        <form action="" method="GET">
-            <div class="row">
-                <div class="col-12 col-md-6">
-                    {% bootstrap_field date_range_form.start_date%}
-                </div>
-                <div class="col-12 col-md-6">
-                    {% bootstrap_field date_range_form.end_date%}
-                </div>
+        <h1>Transaction Stats {{ date_range }}</h1>
+    </div>
+    <div class="row">
+        <div class="col-12 col-md-6 order-1 order-md-6">
+            <!-- Date filter form -->
+            <form action="" method="GET">
                 <div class="col-12">
-                    {% buttons %}
-                    <button type="submit" class="btn btn-primary">Filter</button>
-                    {% endbuttons %}
+                    <div class="row">
+                        <div class="col-12 col-md-6">
+                            {% bootstrap_field date_range_form.start_date field_class='datepicker' %}
+                        </div>
+                        <div class="col-12 col-md-6">
+                            {% bootstrap_field date_range_form.end_date field_class='datepicker' %}
+                        </div>
+                        <div class="col-12 text-center">
+                            {% buttons %}
+                            <button type="submit" class="btn btn-primary w-75">Filter</button>
+                            {% endbuttons %}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </form>
-        <div id="chart" class="col-sm-12"></div>
-        <div class="col-12">
-            <span class="key key-green">£<span id="total-credit"></span> Credit</span>
-            <span class="key key-pink">£<span id="total-debit"></span> Debit</span>
+            </form>
+        </div>
+        <!-- Composite Chart -->
+        <div id="chart" class="col-12 order-2"></div>
+        <div class="col-12 col-md-6 order-3 d-flex flex-column flex-sm-row flex-md-column flex-lg-row flex-wrap">
+            <span class="key key-green">£<span id="total-sales"></span> Sales</span>
+            <span class="key key-pink">£<span id="total-refunds"></span> Refunds</span>
         </div>
     </div>
 </section>
@@ -36,6 +45,7 @@
     <script src="{% static 'js/libs/d3.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/libs/crossfilter.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/libs/dc.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/libs/jquery-ui.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/stats.js' %}" type="text/javascript"></script>
     <script>
         let dataset = {{ chart_data|safe }};
@@ -54,11 +64,12 @@
             }));
             // Built composite chart for credits and debits
             let chart = createCompositeChart('chart', ndx,
-                                             [{name: 'credit', color: colors.green, title: makeTitle},
-                                              {name: 'debit', color: colors.pink, title: makeTitle}]);
+                                             [{name: 'sales', color: colors.green, title: makeTitle},
+                                              {name: 'refunds', color: colors.pink, title: makeTitle}]);
             chart.yAxisLabel('£', 25);
-
-            createTotalCounts(ndx, '#total-', ['credit', 'debit']);
+            
+            // Add totals for legend, with 2 decimal places
+            createTotalCounts(ndx, '#total-', ['sales', 'refunds'], 2);
 
             dc.renderAll();
         });

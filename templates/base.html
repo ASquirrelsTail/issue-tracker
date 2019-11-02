@@ -7,12 +7,12 @@
     <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css?family=Montserrat|Nunito&display=swap" rel="stylesheet">
-    <link href="{% static 'css/main.css' %}" rel="stylesheet">
     <!-- Stripe API - Included on every page for security -->
     <script src="https://js.stripe.com/v3/"></script>
     {% block head %}
         
     {% endblock %}
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light align-items-lg-start">
@@ -82,7 +82,7 @@
     </nav>
     {% if messages %}
     <!-- Message Toasts -->
-    <div class="position-absolute w-100 d-flex flex-column p-4">
+    <div class="toast-container position-absolute w-100 d-flex flex-column p-4">
         {% for message in messages %}
         <div class="toast ml-auto" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="toast-body d-flex">

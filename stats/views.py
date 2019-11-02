@@ -52,29 +52,29 @@ def avg_time_taken(queryset, start_status, end_status):
     return queryset.exclude(**{end_status: None}).annotate(time_taken=F(end_status) - F(start_status)).aggregate(Avg('time_taken'))['time_taken__avg']
 
 
-def interval_string(interval):
+def interval_string(interval, limit=2):
     '''
-    Converts a timedelta interval to a string of years, months, weeks, days, hours, minutes.
+    Converts a timedelta interval to a string of years, months, days, hours, minutes. Uses only largest results up to limit.
     '''
     intervals = (
         ('year', timedelta(days=365).total_seconds()),
         ('month', timedelta(days=30).total_seconds()),
-        ('week', timedelta(days=7).total_seconds()),
+        # ('week', timedelta(days=7).total_seconds()),
         ('day', timedelta(days=1).total_seconds()),
         ('hour', timedelta(hours=1).total_seconds()),
         ('minute', timedelta(minutes=1).total_seconds()),
     )
 
     seconds = interval.total_seconds()
-    result = ''
+    result = []
 
     for interval_name, interval_seconds in intervals:
         if seconds >= interval_seconds:
             count = seconds // interval_seconds
             seconds %= interval_seconds
-            result += '{:.0f} {}{} '.format(count, interval_name, 's' if count > 1 else '')
+            result.append('{:.0f} {}{} '.format(count, interval_name, 's' if count > 1 else ''))
 
-    return result
+    return ' '.join(result[0:limit])
 
 
 class IndexView(TemplateView, ContextMixin):
@@ -122,7 +122,8 @@ class DateRangeView(ContextMixin):
         context = super(DateRangeView, self).get_context_data(**kwargs)
         context['date_range'] = 'For This Week' if not self.form.has_changed() else \
             'Between {:%d/%m/%y}-{:%d/%m/%y}'.format(self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
-        context['date_range_form'] = self.form
+        context['date_range_form'] = self.form if self.form.has_changed() else DateRangeForm(initial={
+            'start_date': self.form.cleaned_data.get('start_date'), 'end_date': self.form.cleaned_data.get('end_date')})
 
         return context
 
@@ -191,8 +192,8 @@ class TransactionsStatsView(PermissionRequiredMixin, TemplateView, DateRangeView
         context = super(TransactionsStatsView, self).get_context_data(**kwargs)
 
         chart_data = {}
-        chart_data['credit'] = list(self.get_date_range_and_annotate(Credit.objects.filter(real_value__gte=1), total=Sum('real_value')))
-        chart_data['debit'] = list(self.get_date_range_and_annotate(Debit.objects.filter(real_value__gte=1), total=Sum('real_value')))
+        chart_data['sales'] = list(self.get_date_range_and_annotate(Credit.objects.filter(real_value__gte=1), total=Sum('real_value')))
+        chart_data['refunds'] = list(self.get_date_range_and_annotate(Debit.objects.filter(real_value__gte=1), total=Sum('real_value')))
 
         context['chart_data'] = json.dumps(chart_data)
 

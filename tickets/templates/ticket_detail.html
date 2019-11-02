@@ -7,7 +7,7 @@
             <h1>{{ object }}</h1>
             <div class="col-12{% if object.status == 'awaiting approval' %} alert alert-warning{% endif %}">
                 <h2 class="d-inline-block">{{ object.status|capfirst }}</h2>
-                {% if perms.tickets.can_update_ticket_status %}
+                {% if perms.tickets.can_update_status %}
                     {% if object.approved is None %}
                         <form class="d-inline-block" action="{% url 'approve-ticket' pk=object.id %}" method="post">
                             {% csrf_token %}
