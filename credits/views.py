@@ -1,4 +1,4 @@
-from django.views.generic.base import TemplateView, View
+from django.views.generic.base import TemplateView, View, ContextMixin
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
@@ -40,12 +40,18 @@ class WalletView(HasWalletMixin, TemplateView):
     template_name = 'wallet.html'
 
 
-class GetCreditsView(HasWalletMixin, FormView):
+class GetCreditsView(HasWalletMixin, FormView, ContextMixin):
     '''
     View for users to buy credits.
     '''
     template_name = 'get_credits.html'
     form_class = GetCreditsForm
+    cost_per_credit = 60
+
+    def get_context_data(self, **kwargs):
+        context = super(GetCreditsView, self).get_context_data(**kwargs)
+        context['cost_per_credit'] = '{:.2f}'.format(self.cost_per_credit / 100)
+        return context
 
     def form_valid(self, form):
         '''
@@ -53,7 +59,7 @@ class GetCreditsView(HasWalletMixin, FormView):
         Overrides success url redirect.
         '''
         no_credits = form.cleaned_data['no_credits']
-        charge = no_credits * 60
+        charge = no_credits * self.cost_per_credit
         intent = PaymentIntent.objects.create_payment_intent(user=self.request.user, credits=no_credits, amount=charge)
         intent.save()
         return render(self.request, 'get_credits_pay.html',

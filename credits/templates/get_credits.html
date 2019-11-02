@@ -9,9 +9,33 @@
             {% csrf_token %}
             {% bootstrap_form form %}
             {% buttons %}
-            <button type="submit" class="btn btn-primary">Get Credits</button>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary w-75">
+                    Buy <span id="no-credits"></span> credit<span id="credit-plural"></span> for £<span id="cost"></span>
+                </button>
+            </div>
             {% endbuttons %}
         </form>
     </div>
 </section>
+{% endblock %}
+{% block javascript %}
+<script>
+    const costPerCredit = {{ cost_per_credit }};
+
+    function calculateCost() {
+        let noCredits = $('#id_no_credits').val();
+        let plural = noCredits != 1 ? 's' : '';
+        let cost = noCredits * costPerCredit;
+        $('#no-credits').text(noCredits);
+        $('#credit-plural').text(plural);
+        $('#cost').text(cost.toFixed(2));
+    }
+
+    $(function() {
+        calculateCost();
+
+        $('#id_no_credits').on('change', calculateCost);
+    });
+</script>
 {% endblock %}

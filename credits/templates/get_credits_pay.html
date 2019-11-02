@@ -5,14 +5,42 @@
 <section class="content">
     <div class="col-12">
         <h1>Get Credits - Pay</h1>
-        <h2>{{ no_credits }} credits for £{{ charge }}</h2>
+        <h2>Buying {{ no_credits }} credits for £{{ charge }}</h2>
         <form id="payment-form" data-secret="{{ client_secret }}">
-            <div id="card-element"></div>
-            {% buttons %}
-            <button type="submit" class="btn btn-primary">Pay</button>
-            {% endbuttons %}
-            <p>Use: 4000002500003155</p>
-            <p>Use: 4000008260003178 to fail with insufficient funds</p>
+            <div class="row">
+                <div class="col-12">
+                    <div class="form-group">
+                        <label for="card-number"><i class="far fa-credit-card"></i> Credit or debit card number:</label>
+                        <div id="card-number" class="form-control" style='height: 2.4em; padding-top: .7em;'></div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="form-group">
+                        <label for="card-expiry">Expires:</label>
+                        <div id="card-expiry" class="form-control" style='height: 2.4em; padding-top: .7em;'></div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="form-group">
+                        <label for="card-cvc">CVC:</label>
+                        <div id="card-cvc" class="form-control" style='height: 2.4em; padding-top: .7em;'></div>
+                    </div>
+                </div>
+                <div class="col-12 text-center">
+                    {% buttons %}
+                    <button type="submit" class="btn btn-primary w-75">Pay £{{ charge }} now</button>
+                    {% endbuttons %}
+                </div>
+            </div>
+
+            <div class="alert alert-warning">
+                <p>Use payment intents testing cards:</p>
+                <ul>
+                    <li>Use: 4000002500003155 to continue to verification</li>
+                    <li>Use: 4000008260003178 to continue to verification, but fail with insufficient funds</li>
+                </ul>
+            </div>
+            
         </form>
         <!-- Modal to display payment error messages -->
         <div class="modal" id="payment-error-modal" tabindex="-1" role="dialog">
@@ -63,7 +91,7 @@
             $('#payment-error-modal').modal('show');
         }else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
             // If stripe returns success, poll the database until the stripe webhook has updated the user's wallet.
-            pollPaymentComplete(500);
+            pollPaymentComplete(1000);
         }
     }
 
@@ -79,8 +107,14 @@
         var stripe = Stripe('{{ stripe_publishable }}');
 
         var elements = stripe.elements();
-        var cardElement = elements.create('card');
-        cardElement.mount('#card-element');
+        var cardNumberElement = elements.create('cardNumber');
+        cardNumberElement.mount('#card-number');
+
+        var cardExpiryElement = elements.create('cardExpiry');
+        cardExpiryElement.mount('#card-expiry');
+
+        var cardCvcElement = elements.create('cardCvc');
+        cardCvcElement.mount('#card-cvc');
 
         $('#payment-form').on('submit', function(e) {
             // On payment submission prevent the form being submitted, 
@@ -88,7 +122,7 @@
             e.preventDefault();
             $('#payment-processing-modal').modal('show');
             var clientSecret = $('#payment-form').data('secret');
-            stripe.handleCardPayment(clientSecret, cardElement)
+            stripe.handleCardPayment(clientSecret, cardNumberElement)
                   .then(handlePaymentResponse);
         });
     });   
