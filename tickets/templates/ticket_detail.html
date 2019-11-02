@@ -54,13 +54,13 @@
                             <div class="col-12 col-lg-10 col-xl-8 offset-lg-1 offset-xl-2 d-flex justify-content-center">
                                 {% csrf_token %}
                                 <label for="id_credits" class="sr-only">Credits</label>
-                                <div class="input-group flex-nowrap">
+                                <div id="btn-feature-vote" class="input-group flex-nowrap">
                                     <div class="input-group-prepend flex-md-grow-1">
-                                        <button type="submit" class="btn btn-primary w-100 text-right">Spend </button>
+                                        <button type="submit" class="w-100 text-right">Spend </button>
                                     </div>
                                     <input type="number" name="credits" value="1" min="1" max="{{ wallet_balance }}" class="form-control" placeholder="Credits" required id="id_credits">
                                     <div class="input-group-append flex-md-grow-1">
-                                        <button type="submit" class="btn btn-primary w-100 text-left">credits to vote for this {{ object.noun }}</button>
+                                        <button type="submit" class="w-100 text-left">credits to vote for this {{ object.noun }}</button>
                                     </div>
                                 </div>
                             </div>
