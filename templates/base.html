@@ -7,6 +7,8 @@
     <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css?family=Montserrat|Nunito&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
     <!-- Stripe API - Included on every page for security -->
     <script src="https://js.stripe.com/v3/"></script>
     {% block head %}
@@ -53,15 +55,25 @@
                 </li>
                 {% if perms.tickets.can_view_all_stats %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'all_ticket_stats' %}">Stats</a>
+                    <a class="nav-link" href="{% url 'all_ticket_stats' %}"><i class="fas fa-chart-area"></i> Stats</a>
+                </li>
+                {% endif %}
+                {% if perms.tickets.can_view_transaction_stats %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'transaction_stats' %}"><i class="fas fa-chart-line"></i> Transactions</a>
+                </li>
+                {% endif %}
+                {% if perms.tickets.can_create_edit_delete_labels %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'labels' %}"><i class="fas fa-tags"></i> Labels</a>
                 </li>
                 {% endif %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
+                    <a class="nav-link" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Log Out</a>
                 </li>
                 {% if wallet_balance is not None %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'wallet' %}">Credits: {{ wallet_balance }}</a>
+                    <a class="nav-link" href="{% url 'wallet' %}"><i class="fas fa-wallet"></i> Credits: {{ wallet_balance }}</a>
                 </li>
                 {% endif %}
                 {% else %}
@@ -70,11 +82,11 @@
             <ul class="navbar-nav user-details col-lg-12 order-lg-1 justify-content-lg-end">
                 {% if login_form %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'login' %}" data-toggle="modal" data-target="#loginModal">Log In</a>
+                    <a class="nav-link" href="{% url 'login' %}" data-toggle="modal" data-target="#loginModal"><i class="fas fa-sign-in-alt"></i> Log In</a>
                 </li>
                 {% endif %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'signup' %}">Sign Up</a>
+                    <a class="nav-link" href="{% url 'signup' %}"><i class="fas fa-user-plus"></i> Sign Up</a>
                 </li>
                 {% endif %}
             </ul>

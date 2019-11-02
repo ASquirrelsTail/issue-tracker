@@ -4,54 +4,38 @@
 {% block content %}
 <article class="row content">
     <div class="col-12">
-            <h1>{{ object }}</h1>
-            <div class="col-12{% if object.status == 'awaiting approval' %} alert alert-warning{% endif %}">
-                <h2 class="d-inline-block">{{ object.status|capfirst }}</h2>
+        <h1>{{ object }}{% if object.status != 'awaiting approval' %} - {{ object.status|capfirst }}{% endif %}</h1>
+        {% if object.status == 'awaiting approval' %}
+        <div class="col-12 alert alert-warning">
+            <h2 class="d-inline-block">{{ object.status|capfirst }}</h2>
+        </div>
+        {% endif %}
+        <div class="col-12 ticket-details">
+            <div><b>Views:</b> {{ object.no_views }}</div>
+            <div><b>Votes:</b> {{ object.no_votes }}</div>
+            <div><b>Comments:</b> {{ object.no_comments }}</div>
+            <div>
                 {% if perms.tickets.can_update_status %}
                     {% if object.approved is None %}
                         <form class="d-inline-block" action="{% url 'approve-ticket' pk=object.id %}" method="post">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-primary">Approve</button>
+                            <button type="submit" class="btn btn-primary"><i class="far fa-thumbs-up"></i> Approve</button>
                         </form>
                     {% elif object.doing is None %}
                         <form class="d-inline-block" action="{% url 'doing-ticket' pk=object.id %}" method="post">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-primary">Doing</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-ellipsis-h"></i> Doing</button>
                         </form>
                     {% elif object.done is None %}
                         <form class="d-inline-block" action="{% url 'done-ticket' pk=object.id %}" method="post">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-primary">Done</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Done</button>
                         </form>
                     {% endif %}
                 {% endif %}
             </div>
-            <p>Views: {{ object.no_views }} Votes: {{ object.no_votes }} Comments: {{ object.no_comments }}</p>
-            {% if object.approved and not object.done %}
-            {% if not has_voted or object.ticket_type == 'Feature' %}
-                {% if user.is_authenticated %}
-                {% if object.ticket_type != 'Feature' or wallet_balance > 0 %}
-                <form action="{% url 'vote-for-ticket' pk=object.id %}" method="post">
-                    {% csrf_token %}
-                    {% if vote_form %}
-                    {% bootstrap_form vote_form %}
-                    {% endif %}
-                    {% buttons %}
-                    <button type="submit" class="btn btn-primary">Upvote</button>
-                    {% endbuttons %}
-                </form>
-                {% else %}
-                    {% if not perms.credits.cant_have_wallet %}
-                    <a href="{% url 'get_credits' %}" class="btn btn-primary">Get more credits to vote for this {{ object.noun }}</a> 
-                    {% endif %}
-                {% endif %}
-                {% else %}
-                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Log in to vote for this {{ object.noun }}</a>   
-                {% endif %}
-            {% else %}
-            <!-- <p>You have already voted.</p> -->
-            {% endif %}
-            {% endif %}
+        </div>
+        <div class="col-12">
             {{ object.content|linebreaks }}
             {% if object.image %}
                 <div class="col-6 col-md-3 col-lg-2">
@@ -60,23 +44,65 @@
                     </a>
                 </div>
             {% endif %}
-            <div class="row align-items-end">
-                <div class="col-12 col-md-6 chips">
+        </div>
+        <div class="col-12 text-center">
+            {% if object.approved and not object.done and not perms.cant_have_wallet %}
+                {% if user.is_authenticated %}
+                    {% if object.ticket_type == 'Feature' %}
+                        {% if wallet_balance > 0 %}
+                        <form action="{% url 'vote-for-ticket' pk=object.id %}" method="post">
+                            <div class="col-12 col-lg-10 col-xl-8 offset-lg-1 offset-xl-2 d-flex justify-content-center">
+                                {% csrf_token %}
+                                <label for="id_credits" class="sr-only">Credits</label>
+                                <div class="input-group flex-nowrap">
+                                    <div class="input-group-prepend flex-md-grow-1">
+                                        <button type="submit" class="btn btn-primary w-100 text-right">Spend </button>
+                                    </div>
+                                    <input type="number" name="credits" value="1" min="1" max="{{ wallet_balance }}" class="form-control" placeholder="Credits" required id="id_credits">
+                                    <div class="input-group-append flex-md-grow-1">
+                                        <button type="submit" class="btn btn-primary w-100 text-left">credits to vote for this {{ object.noun }}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        {% else %}
+                        <a href="{% url 'get_credits' %}" class="btn btn-primary w-75">Get more credits to vote for this {{ object.noun }}</a> 
+                        {% endif %}
+                    {% else %}
+                        {% if not has_voted %}
+                            <form action="{% url 'vote-for-ticket' pk=object.id %}" method="post">
+                            {% csrf_token %}
+                            {% buttons %}
+                            <button type="submit" class="btn btn-primary w-75">Vote for this {{ object.noun }}</button>
+                            {% endbuttons %}
+                        </form>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary w-75">Log in to vote for this {{ object.noun }}</a>   
+                {% endif %}
+            {% endif %}
+        </div>
+        <div class="row align-items-end">
+            <div class="col-12 col-md-6 chips">
+                {% if object.selected_labels %}
+                    <div class="chips-label"><i class="fas fa-tag"></i> Labels: </div>
                     {% for label in object.selected_labels %}
                     <a href="{{ label.get_absolute_url }}"><div class="chip">{{ label.name }}</div></a>
                     {% endfor %}
-                </div>
-                <div class="col-12 col-md-6 text-right">
-                    {% if object.edited %}
-                    Last edit {{ object.edited|date:'d/m/y H:i' }}
-                    {% endif %}
-                    {% if object.user == user or perms.tickets.can_edit_all_tickets %}
-                    <a href="{% url 'edit-ticket' pk=object.id %}" class="btn btn-warning">Edit Ticket</a>
-                    <a href="{% url 'delete-ticket' pk=object.id %}" class="btn btn-danger btn-delete">Delete Ticket</a>
-                    {% endif %}
-                </div>
+                {% endif %}
             </div>
-            
+            <div class="col-12 col-md-6 text-right">
+                {% if object.edited %}
+                Last edit {{ object.edited|date:'d/m/y H:i' }}
+                {% endif %}
+                {% if object.user == user or perms.tickets.can_edit_all_tickets %}
+                <a href="{% url 'edit-ticket' pk=object.id %}" class="btn btn-warning"><i class="fas fa-pen"></i> Edit Ticket</a>
+                <a href="{% url 'delete-ticket' pk=object.id %}" class="btn btn-danger btn-delete">Delete Ticket</a>
+                {% endif %}
+            </div>
+        </div>
+        
     </div>
 </article>
 {% if object.approved %}
@@ -84,13 +110,13 @@
 {% if object.comments %}
     <div class="row comment">
         <div class="col-12">
-            <h3>{{ object.no_comments }} Comments:</h3>
+            <h2>{{ object.no_comments }} Comments:</h2>
         </div>
     </div>
     {% for comment in object.comments %}
     <div class="row comment" id="comment-{{ comment.id }}">
         <div class="col-12">
-            <h4>Comment by {{ comment.user }} at {{ comment.created|date:'d/m/y H:i' }}</h4>
+            <h3>Comment by {{ comment.user }} at {{ comment.created|date:'d/m/y H:i' }}</h3>
             <blockquote>
                 {{ comment.content|linebreaks }}
             </blockquote>
@@ -100,7 +126,7 @@
             <span class="edited">Last edit {{ comment.edited|date:'d/m/y H:i' }}</span>
             {% endif %}
             {% if comment.user == user or perms.tickets.can_edit_all_comments %}
-            <a href="{% url 'edit-comment' ticket_pk=object.id pk=comment.id %}" class="btn btn-warning">Edit Comment</a>
+            <a href="{% url 'edit-comment' ticket_pk=object.id pk=comment.id %}" class="btn btn-warning"><i class="far fa-edit"></i> Edit Comment</a>
             <a href="{% url 'delete-comment' ticket_pk=object.id pk=comment.id %}" class="btn btn-danger btn-delete">Delete Comment</a>
             {% endif %}
         </div>
@@ -111,7 +137,7 @@
             </a>
             {% endif %}
             {% if comment_form %}
-            <a class="btn btn-primary btn-reply-to" data-toggle="collapse" href="#comment-{{ comment.id }}-replies" role="button" aria-expanded="false" aria-controls="comment-{{ comment.id }}-replies">Reply</a>
+            <a class="btn btn-primary btn-reply-to" data-toggle="collapse" href="#comment-{{ comment.id }}-replies" role="button" aria-expanded="false" aria-controls="comment-{{ comment.id }}-replies"><i class="far fa-comments"></i> Reply</a>
             {% endif %}
         </div>
     </div>
@@ -120,7 +146,7 @@
             {% if comment.replies %}
                 {% for reply in comment.replies %}
                 <div class="reply" id="reply-{{ reply.id }}">
-                    <h5>Reply by {{ reply.user }} at {{ reply.created|date:'d/m/y H:i' }}</h5>
+                    <h4>Reply by {{ reply.user }} at {{ reply.created|date:'d/m/y H:i' }}</h4>
                     <blockquote>
                         {{ reply.content|linebreaks }}
                     </blockquote>
@@ -129,7 +155,7 @@
                         <span class="edited">Last edit {{ reply.edited|date:'d/m/y H:i' }}</span>
                         {% endif %}
                         {% if reply.user == user or perms.tickets.can_edit_all_comments %}
-                        <a href="{% url 'edit-comment' ticket_pk=object.id pk=reply.id %}" class="btn btn-warning">Edit Reply</a>
+                        <a href="{% url 'edit-comment' ticket_pk=object.id pk=reply.id %}" class="btn btn-warning"> <i class="far fa-edit"></i> Edit Reply</a>
                         <a href="{% url 'delete-comment' ticket_pk=object.id pk=reply.id %}" class="btn btn-danger btn-delete">Delete Reply</a>
                         {% endif %}
                     </div>
@@ -147,14 +173,14 @@
                             <textarea id="reply_{{ comment.id }}_content" name="content" cols="40" rows="4" class="form-control" placeholder="Comment" title="" required ></textarea>
                         </div>
                         {% buttons %}
-                        <button type="submit" class="btn btn-primary">Add Reply</button>
+                        <button type="submit" class="btn btn-primary"><i class="far fa-comments"></i> Add Reply</button>
                         {% endbuttons %}
                     </form>
                 </div>
             </div>
             {% else %}
             <div class="reply-to text-center" id="reply-to-{{ comment.id }}">
-                <a href="{% url 'login' %}?next={{ request.path }}%23reply-to-{{ comment.id }}" class="btn btn-primary">Log in to reply</a>
+                <a href="{% url 'login' %}?next={{ request.path }}%23reply-to-{{ comment.id }}" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Log in to reply</a>
             </div>
             {% endif %}
         </div>
@@ -171,18 +197,18 @@
     <div class="row add-comment" id="add-comment">
         <div class="col-12">
         {% if comment_form %}
-            <h4>Commenting as {{ user.username }}</h4>
+            <h3>Commenting as {{ user.username }}</h3>
             <form action="{% url 'add-comment' ticket_pk=object.id %}" method="post">
                 {% csrf_token %}
                 {% bootstrap_form comment_form %}
                 {% buttons %}
-                <button type="submit" class="btn btn-primary">Add Comment</button>
+                <button type="submit" class="btn btn-primary"><i class="far fa-comment"></i> Add Comment</button>
                 {% endbuttons %}
             </form>
         {% else %}
-        <h4>Log in to comment</h4>
+        <h3>Log in to comment</h3>
         <div class="text-center">
-            <a href="{% url 'login' %}?next={{ request.path }}%23add-comment" class="btn btn-primary">Log in</a>
+            <a href="{% url 'login' %}?next={{ request.path }}%23add-comment" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Log in</a>
         </div>
         {% endif %}
         </div>

@@ -133,8 +133,16 @@ a:hover {
 	flex-wrap: wrap;
 }
 
+.chips-label {
+	order: 0;
+	font-size: 1.2em;
+	font-weight: bold;
+	margin-right: 1em;
+	margin-bottom: 0.5rem;
+    padding-top: 0.25rem;
+}
+
 .chip {
-	display: inline-block;
 	margin-right: 1em;
 	margin-bottom: 0.5rem;
 	cursor: pointer;
@@ -261,6 +269,25 @@ a:hover {
 }
 
 /* TICKET DETAIL */
+
+.ticket-details {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	margin-bottom: 1rem;
+}
+
+.ticket-details div {
+	margin-right: 1rem;
+}
+
+.input-group #id_credits {
+	flex: none;
+	-ms-flex: none;
+	width: 4em;
+	height: 100%;
+	text-align: right;
+}
 
 .content, .comment, .reply, .reply-to, .add-comment {
 	background-color: white;
