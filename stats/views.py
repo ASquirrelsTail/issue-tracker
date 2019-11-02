@@ -217,7 +217,7 @@ class RoadmapView(TemplateView, ContextMixin):
 
         def create_roadmap_entry(ticket):
             return {'title': ticket['title'],
-                    'type': ticket['ticket_type'].lower(),
+                    'type': ticket['ticket_type'],
                     'url': str(reverse_lazy('ticket', kwargs={'pk': ticket['id']})),
                     'date': ticket['done'].strftime('%d/%m/%y') if ticket['done'] is not None else 'Coming Soon'}
 

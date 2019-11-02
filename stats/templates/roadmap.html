@@ -6,9 +6,9 @@
         <h1>Roadmap</h1>
         <ul id="roadmap" class="roadmap">
         {% for ticket in tickets %}
-            <li class="roadmap-entry {{ ticket.type }}{% if ticket.date == 'Coming Soon' %} coming-soon{% endif %}">
+            <li class="roadmap-entry {{ ticket.type|lower }}{% if ticket.date == 'Coming Soon' %} coming-soon{% endif %}">
                 <a href="{{ ticket.url }}">
-                    {{ ticket.date }} - {{ ticket.title }}<span class="sr-only"> - {{ ticket.type }}</span>
+                    {{ ticket.date }} - {{ ticket.title }} <span class="badge badge-secondary">{{ ticket.type }}</span>
                 </a>
             </li>
         {% endfor %}
@@ -36,9 +36,9 @@
                         result.tickets.forEach(function(ticket) {
                             let comingSoon = ticket.date === 'Coming Soon' ? ' coming-soon' : '';
                             roadmap.append(`
-                            <li class="roadmap-entry ${ticket.type}${comingSoon}">
+                            <li class="roadmap-entry ${ticket.type.toLowerCase()}${comingSoon}">
                                 <a href="${ticket.url}">
-                                    ${ticket.date} - ${ticket.title}<span class="sr-only"> - ${ticket.type}</span>
+                                    ${ticket.date} - ${ticket.title} <span class="badge">${ticket.type}</span>
                                 </a>
                             </li>`);
                         });
