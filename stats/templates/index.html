@@ -21,6 +21,7 @@
             </div>
         </a>
     </div>
+    {% if avg_time_to_bugfix %}
     <div class="col-12 col-md-6 col-lg-4">
         <div class="square">
             <div class="square-content">
@@ -29,6 +30,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
     <div class="col-12 col-md-6 col-lg-4">
         <a href="{{ most_requested_feature_url }}">
             <div class="square">

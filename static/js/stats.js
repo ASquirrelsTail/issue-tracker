@@ -44,7 +44,7 @@ function createGroupFrom(dimension, type) {
                         newGroup.push({key: prevDay, value: {total: 0, type: type}});
                     }
 
-                    newRecordIndex = newGroup.findIndex(newRecord => newRecord.key.getTime() == record.key.getTime());
+                    let newRecordIndex = newGroup.findIndex(newRecord => newRecord.key.getTime() == record.key.getTime());
                     if (newRecordIndex === -1) newGroup.push(record);
                     else newGroup[newRecordIndex].value.total += record.value.total;
 
@@ -105,14 +105,14 @@ function createCompositeChart(chartID, ndx, groups) {
 }
 
 function reduceTotalByGroup(dimension, keys) {
-    fullGroup = dimension.group().reduceSum((d) => d.total).all();
+    let fullGroup = dimension.group().reduceSum((d) => d.total).all();
 
     return {
         all() {
             return keys.map((key) => {
                 // If the key exists return it, else create a group with a value of zero.
-                actualGroup = fullGroup.find(group => group.key === key);
-                value = actualGroup ? actualGroup.value : 0;
+                let actualGroup = fullGroup.find(group => group.key === key);
+                let value = actualGroup ? actualGroup.value : 0;
                 return {key, value};
             });
         }

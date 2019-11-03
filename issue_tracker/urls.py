@@ -13,8 +13,11 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+import os
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.views.static import serve
+from django.conf import settings
 from account import urls as account_urls
 from tickets import urls as tickets_urls
 from credits import urls as credits_urls
@@ -30,3 +33,7 @@ urlpatterns = [
     url(r'^roadmap/$', RoadmapView.as_view(), name='roadmap'),
     url(r'^$', IndexView.as_view(), name='index'),
 ]
+
+# If local static is set, or there is no AWS access key use local media storage
+if 'LOCAL_STATIC' in os.environ or not settings.AWS_ACCESS_KEY_ID:
+    urlpatterns.append(url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}))

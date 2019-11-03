@@ -128,11 +128,11 @@ USE_L10N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# Static and media files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-# STATIC_URL = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'), )
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Amazon AWS Settings
 
@@ -150,20 +150,17 @@ AWS_DEFAULT_ACL = None  # Use the bucket's default permissions.
 AWS_S3_CUSTOM_DOMAIN = '{}.s3.amazonaws.com'.format(AWS_STORAGE_BUCKET_NAME)
 
 AWS_STATIC_LOCATION = 'static'
+AWS_MEDIA_LOCATION = 'media'
 
-# if $LOCAL_STATIC is set, then use local static, else use AWS static storage
+# if $LOCAL_STATIC is set or $AWS_ACCESS_KEY_ID is unset, then use local static and media, else use AWS static storage
 
-if 'LOCAL_STATIC' in os.environ:
+if 'LOCAL_STATIC' in os.environ or AWS_ACCESS_KEY_ID is None:
     STATIC_URL = '/static/'
+    MEDIA_URL = '/media/'
 else:
     STATIC_URL = 'https://{}/{}/'.format(AWS_S3_CUSTOM_DOMAIN, AWS_STATIC_LOCATION)
     STATICFILES_STORAGE = 'issue_tracker.custom_storages.StaticStorage'
-
-# Media file storage
-
-AWS_MEDIA_LOCATION = 'media'
-
-DEFAULT_FILE_STORAGE = 'issue_tracker.custom_storages.MediaStorage'
+    DEFAULT_FILE_STORAGE = 'issue_tracker.custom_storages.MediaStorage'
 
 # URL users are redirected to after they log in and out if no next URL is specified
 

@@ -87,8 +87,11 @@ class IndexView(TemplateView, ContextMixin):
         context = super(IndexView, self).get_context_data()
         context['bugs_this_week'] = last_x_days(Ticket.objects.filter(ticket_type='Bug'), 'done', 7).count()
         context['features_coming_soon'] = Ticket.objects.exclude(doing=None).filter(ticket_type='Feature', done=None).count()
-        avg_time_to_bugfix = avg_time_taken(Ticket.objects.filter(ticket_type='Bug'), 'created', 'done')
-        context['avg_time_to_bugfix'] = interval_string(avg_time_to_bugfix)
+        try:
+            avg_time_to_bugfix = avg_time_taken(Ticket.objects.filter(ticket_type='Bug'), 'created', 'done')
+            context['avg_time_to_bugfix'] = interval_string(avg_time_to_bugfix)
+        except NotImplementedError:
+            pass
         try:
             context['most_requested_feature_url'] = Ticket.objects.exclude(approved=None).filter(done=None, ticket_type='Feature').annotate(votes=Sum('vote__count')) \
                 .order_by('votes')[0].get_absolute_url()
