@@ -87,6 +87,7 @@ class IndexView(TemplateView, ContextMixin):
         context = super(IndexView, self).get_context_data()
         context['bugs_this_week'] = last_x_days(Ticket.objects.filter(ticket_type='Bug'), 'done', 7).count()
         context['features_coming_soon'] = Ticket.objects.exclude(doing=None).filter(ticket_type='Feature', done=None).count()
+        context['total_features_implemented'] = Ticket.objects.exclude(done=None).filter(ticket_type='Feature').count()
         try:
             avg_time_to_bugfix = avg_time_taken(Ticket.objects.filter(ticket_type='Bug'), 'created', 'done')
             context['avg_time_to_bugfix'] = interval_string(avg_time_to_bugfix)

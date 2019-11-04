@@ -50,15 +50,21 @@ a:hover {
 	margin: 0.25rem;
 }
 
-.btn:hover {
+.btn:not(:disabled):not(.disabled):hover, .btn:not(:disabled):not(.disabled):active {
 	color: white;
 	border: none;
 	padding: .625rem 1rem;
 }
 
-.btn:active {
-	border: none;
-	padding: .625rem 1rem;
+.btn.disabled, .btn:disabled {
+	background-color: #cccccc;
+	border-color: #999999;
+	color: white;
+	cursor: default;
+}
+
+.btn.disabled:focus, .btn:disabled:focus {
+	box-shadow: none;
 }
 
 .btn-primary, a.btn-primary {
@@ -66,12 +72,12 @@ a:hover {
 	border-color: #a6e22e;
 }
 
-.btn-primary:hover, .btn-primary:not(:disabled):not(.disabled):active {
+.btn-primary:not(:disabled):not(.disabled):hover, .btn-primary:not(:disabled):not(.disabled):active {
 	background: rgb(102,217,239);
 	background: linear-gradient(130deg, rgba(102,217,239,1) 0%, rgba(166,226,46,1) 35%, rgba(137,186,38,1) 85%);
 }
 
-.btn-primary:focus, .btn-primary:not(:disabled):not(.disabled):active:focus {
+.btn-primary:not(:disabled):not(.disabled):focus, .btn-primary:not(:disabled):not(.disabled):active:focus {
 	box-shadow: 0 0 0 0.2rem rgba(166,226,46,.5);
 }
 
@@ -80,12 +86,13 @@ a:hover {
 	border-color: #f92672;
 }
 
-.btn-danger:hover, .btn-danger:not(:disabled):not(.disabled):active {
+.btn-danger:not(:disabled):not(.disabled):hover, .btn-danger:not(:disabled):not(.disabled):active {
 	background: rgb(253,151,31);
 	background: linear-gradient(130deg, rgba(253,151,31,1) 0%, rgba(249,38,114,1) 35%, rgba(201,3,74,1) 85%);
 }
 
-.btn-danger:focus, .btn-danger:not(:disabled):not(.disabled):active:focus, .btn-warning:focus, .btn-warning:not(:disabled):not(.disabled):active:focus {
+.btn-danger:not(:disabled):not(.disabled):focus, .btn-danger:not(:disabled):not(.disabled):active:focus, 
+.btn-warning:not(:disabled):not(.disabled):focus, .btn-warning:not(:disabled):not(.disabled):active:focus {
 	box-shadow: 0 0 0 0.2rem rgba(249,118,34,.5);
 }
 
@@ -94,7 +101,7 @@ a:hover {
 	border-color: #fd971f;
 }
 
-.btn-warning:hover, .btn-warning:not(:disabled):not(.disabled):active {
+.btn-warning:not(:disabled):not(.disabled):hover, .btn-warning:not(:disabled):not(.disabled):active {
 	background: rgb(249,38,114);
 	background: linear-gradient(130deg, rgba(249,38,114,1) 0%, rgba(253,151,31,1) 35%, rgba(209,122,20,1) 85%);
 }
@@ -298,7 +305,10 @@ a:hover {
 	border-radius: 1rem;
 	text-align: center;
 	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
 	align-items: center;
+	justify-content: center;
 }
 
 .square .square-content {
@@ -311,6 +321,11 @@ a:hover {
 
 .square .huge {
 	font-size: 8em;
+}
+
+.square h2, .square h3, .square h4 {
+	width: 100%;
+	text-align: center;
 }
 
 /* TICKET DETAIL */
