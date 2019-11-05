@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET
@@ -9,10 +11,14 @@ stripe.api_key = settings.STRIPE_SECRET
 
 
 class Wallet(models.Model):
+    '''
+    Class to keep track of a user's credits.
+    '''
     user = models.OneToOneField(User)
     balance = models.IntegerField(default=0)
 
     class Meta:
+        # Permissions to prevent admins having a wallet, and allow an admin to view transaction stats.
         permissions = (('cant_have_wallet', 'User can\'t have a wallet.'),
                        ('can_view_transactions_stats', 'User can view all transaction stats'))
 
@@ -21,7 +27,7 @@ class Wallet(models.Model):
 
     def credit(self, amount=0, real_value=0, transaction_id=None):
         '''
-        Credits the user an amount.
+        Credits the user's wallet with an amount, logs it and associates the transaction with a real value, and a Stripe transaction.
         '''
         self.balance += amount
         transaction = Credit.objects.create(wallet=self, amount=amount, real_value=real_value, stripe_transaction_id=transaction_id)
@@ -31,7 +37,7 @@ class Wallet(models.Model):
 
     def debit(self, amount=0, real_value=0):
         '''
-        Debits an amount from the users wallet.
+        Debits an amount from the users wallet and logs it.
         '''
         if self.balance >= amount:
             self.balance -= amount
@@ -44,6 +50,9 @@ class Wallet(models.Model):
 
 
 class Transaction(models.Model):
+    '''
+    Abstract class for a transaction.
+    '''
     wallet = models.ForeignKey(Wallet)
     created = models.DateTimeField(auto_now_add=True)
     amount = models.IntegerField(default=0)
@@ -54,14 +63,27 @@ class Transaction(models.Model):
 
 
 class Credit(Transaction):
+    '''
+    A model to log credits to a user's wallet, store it's Stripe transaction id and track whether it has been refunded.
+    '''
     refunded = models.BooleanField(default=False)
     stripe_transaction_id = models.CharField(max_length=50, null=True, default=None)
 
+    def __str__(self):
+        return '{} Credits to {} @ {}'.format(self.amount, self.wallet.user, self.created.strftime('%d/%m/%y %H:%M'))
+
     @property
     def can_refund(self):
-        return self.wallet.balance >= self.amount and self.stripe_transaction_id is not None
+        '''
+        Returns whether or not a credit can be refunded.
+        '''
+        return not self.refunded and self.wallet.balance >= self.amount\
+            and self.created > timezone.now() - timedelta(days=90) and self.stripe_transaction_id is not None
 
     def refund(self):
+        '''
+        Refunds a credit transaction, debiting the user's wallet the amount and refunding the Stripe transaction.
+        '''
         if self.can_refund:
             try:
                 refund = stripe.Refund.create(charge=self.stripe_transaction_id)
@@ -79,7 +101,11 @@ class Credit(Transaction):
 
 
 class Debit(Transaction):
-    pass
+    '''
+    Model to log debits.
+    '''
+    def __str__(self):
+        return 'Debit of {} Credits From {} @ {}'.format(self.amount, self.wallet.user, self.created)
 
 
 class PaymentIntentManager(models.Manager):
