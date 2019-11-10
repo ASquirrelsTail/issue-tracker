@@ -51,6 +51,9 @@ class Ticket(models.Model):
 
     @property
     def noun(self):
+        '''
+        Returns the noun to use for the ticket.
+        '''
         for ticket_type, noun in self.TICKET_TYPE_CHOICES:
             if ticket_type == self.ticket_type:
                 return noun
@@ -59,10 +62,16 @@ class Ticket(models.Model):
 
     @property
     def selected_labels(self):
+        '''
+        Returns the ticket's labels.
+        '''
         return self.labels.all()
 
     @property
     def no_views(self):
+        '''
+        returns the number of views the ticket has recieved
+        '''
         return self.pageview_set.all().count()
 
     @property

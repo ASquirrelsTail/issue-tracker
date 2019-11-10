@@ -234,6 +234,7 @@ class RoadmapView(TemplateView, ContextMixin):
         return context
 
     def get(self, request, *args, **kwargs):
+        # If Json request, return the tickets list and done variables from the context as json. Otherwise render the page as usual.
         if request.content_type == 'application/json':
             page = int(self.request.GET['page'])
             context = self.get_context_data(page=page)

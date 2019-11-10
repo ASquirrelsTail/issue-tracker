@@ -57,6 +57,7 @@
         let dataset = {{ chart_data|safe }};
 
         function makeTitle(d) {
+            // Function to build the title of a point on the composite chart.
             return `${d.key.toDateString()}: ${d.value.total} ${d.value.type}`;
         }
 

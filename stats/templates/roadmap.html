@@ -28,10 +28,13 @@
         $(function() {
             $('#load-more').on('click', function() {
                 let button = $(this);
+                // When load more is clicked, if it isn't disabled request the next page of the roadmap.
                 if (!button.hasClass('disabled')) {
+                    // Disable the button while ajax call is made.
                     button.addClass('disabled').html('<span class="spinner-border spinner-border-sm hidden" role="status"></span> Loading...')
                     $.ajax({url: '?page=' + button.data('page'), type: 'GET', contentType: 'application/json'})
                      .done(function(result) {
+                        // On success append the new entries in order.
                         let roadmap = $('#roadmap');
                         result.tickets.forEach(function(ticket) {
                             let comingSoon = ticket.date === 'Coming Soon' ? ' coming-soon' : '';
@@ -42,12 +45,14 @@
                                 </a>
                             </li>`);
                         });
+                        // If the results are done fade out the load more button, otherwise enable it again.
                         if (result.done) button.fadeOut();
                         else {
                             button.data('page', button.data('page') + 1).removeClass('disabled').html('Load More');
                         }
                      })
                      .fail(function(result) {
+                        // On failiure alert the user something went wrong.
                             console.log(result);
                             button.addClass('btn-warning').removeClass('btn-primary').html('Oops... Something went wrong!');
                      });

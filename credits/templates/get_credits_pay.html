@@ -104,16 +104,16 @@
 
     $(function() {
     	// On load set up stripe API and create Stripe Elements card input.
-        var stripe = Stripe('{{ stripe_publishable }}');
+        let stripe = Stripe('{{ stripe_publishable }}');
 
-        var elements = stripe.elements();
-        var cardNumberElement = elements.create('cardNumber');
+        let elements = stripe.elements();
+        let cardNumberElement = elements.create('cardNumber');
         cardNumberElement.mount('#card-number');
 
-        var cardExpiryElement = elements.create('cardExpiry');
+        let cardExpiryElement = elements.create('cardExpiry');
         cardExpiryElement.mount('#card-expiry');
 
-        var cardCvcElement = elements.create('cardCvc');
+        let cardCvcElement = elements.create('cardCvc');
         cardCvcElement.mount('#card-cvc');
 
         $('#payment-form').on('submit', function(e) {
@@ -121,7 +121,7 @@
             // retrieve the payment intent client secret key and pass to Stripe with the card details.
             e.preventDefault();
             $('#payment-processing-modal').modal('show');
-            var clientSecret = $('#payment-form').data('secret');
+            let clientSecret = $('#payment-form').data('secret');
             stripe.handleCardPayment(clientSecret, cardNumberElement)
                   .then(handlePaymentResponse);
         });

@@ -83,7 +83,7 @@ function createCompositeChart(chartID, ndx, groups) {
     // If the date range has been set by the user, use that range for the chart, otherwise use defaults.
     if ($('#id_start_date').val() != '') minDate = d3.time.format('%Y-%m-%d').parse($('#id_start_date').val());
     else {
-        let today = new Date(); // Sort this mess!
+        let today = new Date();
         minDate = new Date(today.setDate(today.getDate() - 7)).setHours(0,0,0,0);
     }
     if ($('#id_end_date').val() != '') maxDate = d3.time.format('%Y-%m-%d').parse($('#id_end_date').val());
@@ -105,6 +105,7 @@ function createCompositeChart(chartID, ndx, groups) {
 }
 
 function reduceTotalByGroup(dimension, keys) {
+    // Creates a fake group consisting of the specified group names.
     let fullGroup = dimension.group().reduceSum((d) => d.total).all();
 
     return {
@@ -120,6 +121,7 @@ function reduceTotalByGroup(dimension, keys) {
 }
 
 function createPieChart(chartID, ndx, keys) {
+    // Creates a pie chart containing the group names specified in keys.
     let pie = dc.pieChart('#' + chartID);
 
     let typeDim = ndx.dimension(dc.pluck('type'));
@@ -135,6 +137,7 @@ function createPieChart(chartID, ndx, keys) {
 }
 
 function createTotalCounts(ndx, prefix, keys, decimals=0) {
+    // Creates totals of each group specified in keys, and sets of the text of the element made up of {prefix}{key} to that value.
     let typeDim = ndx.dimension(dc.pluck('type'));
     let typeGroup = reduceTotalByGroup(typeDim, keys);
     let typeTotals = typeGroup.all();
