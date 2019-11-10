@@ -18,7 +18,7 @@
             </div>
         </a>
     </div>
-    {% if user.is_authenticated %}
+    {% if user.is_authenticated and not perms.credits.cant_have_wallet%}
     <div class="col-12 col-md-6 col-lg-4">
         <a href="{% url 'get_credits' %}">
             <div class="square">

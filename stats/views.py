@@ -72,7 +72,7 @@ def interval_string(interval, limit=2):
         if seconds >= interval_seconds:
             count = seconds // interval_seconds
             seconds %= interval_seconds
-            result.append('{:.0f} {}{} '.format(count, interval_name, 's' if count > 1 else ''))
+            result.append('{:.0f} {}{}'.format(count, interval_name, 's' if count > 1 else ''))
 
     return ' '.join(result[0:limit])
 
@@ -101,7 +101,7 @@ class IndexView(TemplateView, ContextMixin):
         return context
 
 
-class DateRangeView(ContextMixin):
+class DateRangeMixin(ContextMixin):
     '''
     Abstract view for including date range queries for stats.
     '''
@@ -116,23 +116,26 @@ class DateRangeView(ContextMixin):
         Filters the queryset by the date range, annotates the queryset with a date field base don the date_to_use (default 'created'),
         groups the queryset by date, and annotates it with a total, based on the total annotation provided (default count).
         '''
-        queryset = filter_date_range(queryset, self.date_to_use, self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
-        queryset = annotate_date(queryset, self.date_to_use)
-        queryset = queryset.values('date').annotate(total=total)
-        return queryset
+        if self.form.is_valid():
+            queryset = filter_date_range(queryset, self.date_to_use, self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
+            queryset = annotate_date(queryset, self.date_to_use)
+            queryset = queryset.values('date').annotate(total=total)
+            return list(queryset)
+        else:
+            return []
 
     def get_context_data(self, **kwargs):
         self.get_form_kwargs()
-        context = super(DateRangeView, self).get_context_data(**kwargs)
+        context = super(DateRangeMixin, self).get_context_data(**kwargs)
         context['date_range'] = 'For This Week' if not self.form.has_changed() else \
             'Between {:%d/%m/%y}-{:%d/%m/%y}'.format(self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
-        context['date_range_form'] = self.form if self.form.has_changed() else DateRangeForm(initial={
-            'start_date': self.form.cleaned_data.get('start_date'), 'end_date': self.form.cleaned_data.get('end_date')})
+        context['date_range_form'] = DateRangeForm(initial={'start_date': self.form.cleaned_data.get('start_date'),
+                                                            'end_date': self.form.cleaned_data.get('end_date')})
 
         return context
 
 
-class TicketStatsView(AuthorOrAdminMixin, DateRangeView, DetailView):
+class TicketStatsView(AuthorOrAdminMixin, DateRangeMixin, DetailView):
     '''
     View for ticket stats, only accessible by a tickets author, or admin with the required permission.
     '''
@@ -146,16 +149,16 @@ class TicketStatsView(AuthorOrAdminMixin, DateRangeView, DetailView):
 
         # Add stats to page context
         chart_data = {}
-        chart_data['comments'] = list(self.get_date_range_and_annotate(self.object.comment_set))
-        chart_data['views'] = list(self.get_date_range_and_annotate(self.object.pageview_set))
-        chart_data['votes'] = list(self.get_date_range_and_annotate(self.object.vote_set, total=Sum('count')))
+        chart_data['comments'] = self.get_date_range_and_annotate(self.object.comment_set)
+        chart_data['views'] = self.get_date_range_and_annotate(self.object.pageview_set)
+        chart_data['votes'] = self.get_date_range_and_annotate(self.object.vote_set, total=Sum('count'))
 
         context['chart_data'] = json.dumps(chart_data)
 
         return context
 
 
-class AllTicketStatsView(PermissionRequiredMixin, TemplateView, DateRangeView):
+class AllTicketStatsView(PermissionRequiredMixin, TemplateView, DateRangeMixin):
     '''
     View for displaying stats across all tickets. Only accessible to admin users.
     '''
@@ -168,23 +171,23 @@ class AllTicketStatsView(PermissionRequiredMixin, TemplateView, DateRangeView):
 
         context['awaiting_approval'] = Ticket.objects.filter(approved=None).count()
         context['top_5_features'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Feature', done=None) \
-            .annotate(votes=Sum('vote__count')).order_by('votes')[:5]
+            .annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
         context['top_5_bugs'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Bug', done=None) \
-            .annotate(votes=Sum('vote__count')).order_by('votes')[:5]
+            .annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
 
         chart_data = {}
-        chart_data['bugs'] = list(self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Bug')))
-        chart_data['features'] = list(self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Feature')))
-        chart_data['comments'] = list(self.get_date_range_and_annotate(Comment.objects.all()))
-        chart_data['views'] = list(self.get_date_range_and_annotate(Pageview.objects.all()))
-        chart_data['votes'] = list(self.get_date_range_and_annotate(Vote.objects.all(), total=Sum('count')))
+        chart_data['bugs'] = self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Bug'))
+        chart_data['features'] = self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Feature'))
+        chart_data['comments'] = self.get_date_range_and_annotate(Comment.objects.all())
+        chart_data['views'] = self.get_date_range_and_annotate(Pageview.objects.all())
+        chart_data['votes'] = self.get_date_range_and_annotate(Vote.objects.all(), total=Sum('count'))
 
         context['chart_data'] = json.dumps(chart_data)
 
         return context
 
 
-class TransactionsStatsView(PermissionRequiredMixin, TemplateView, DateRangeView):
+class TransactionsStatsView(PermissionRequiredMixin, TemplateView, DateRangeMixin):
     '''
     View for displaying stats across all transactions. Only accessible to admin users.
     '''
@@ -196,8 +199,8 @@ class TransactionsStatsView(PermissionRequiredMixin, TemplateView, DateRangeView
         context = super(TransactionsStatsView, self).get_context_data(**kwargs)
 
         chart_data = {}
-        chart_data['sales'] = list(self.get_date_range_and_annotate(Credit.objects.filter(real_value__gte=1), total=Sum('real_value')))
-        chart_data['refunds'] = list(self.get_date_range_and_annotate(Debit.objects.filter(real_value__gte=1), total=Sum('real_value')))
+        chart_data['sales'] = self.get_date_range_and_annotate(Credit.objects.filter(real_value__gte=1), total=Sum('real_value'))
+        chart_data['refunds'] = self.get_date_range_and_annotate(Debit.objects.filter(real_value__gte=1), total=Sum('real_value'))
 
         context['chart_data'] = json.dumps(chart_data)
 
@@ -227,12 +230,10 @@ class RoadmapView(TemplateView, ContextMixin):
 
         context['tickets'] = list(create_roadmap_entry(ticket) for ticket in ticket_selection)
         context['done'] = no_doing_or_done_tickets - 1 < (page + 1) * self.tickets_per_page
-        print(no_doing_or_done_tickets)
 
         return context
 
     def get(self, request, *args, **kwargs):
-        print(request.content_type)
         if request.content_type == 'application/json':
             page = int(self.request.GET['page'])
             context = self.get_context_data(page=page)
