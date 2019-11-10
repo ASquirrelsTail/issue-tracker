@@ -8,12 +8,12 @@ class DateRangeForm(forms.Form):
     '''
     A form to select a daterange. Defaults to 1 week ago to today.
     '''
-    start_date = forms.DateField(required=False)
     end_date = forms.DateField(required=False)
+    start_date = forms.DateField(required=False)
 
     def clean_start_date(self):
         '''
-        Validates start date. Can't be after end date, or today. Defaults to 7 days ago if not set.
+        Validates start date. Can't be after end date, or today. Defaults to 7 days before end date if not set.
         '''
         start_date = self.cleaned_data['start_date']
         end_date = self.cleaned_data.get('end_date')
@@ -25,6 +25,8 @@ class DateRangeForm(forms.Form):
             else:
                 if start_date > end_date:
                     raise ValidationError(u'Start date must be before end date.')
+        elif end_date:
+            self.cleaned_data['start_date'] = end_date - timedelta(days=7)
         else:
             self.cleaned_data['start_date'] = timezone.now().date() - timedelta(days=7)
 
