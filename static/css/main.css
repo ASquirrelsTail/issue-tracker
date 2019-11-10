@@ -282,6 +282,10 @@ a:hover {
 
 /* HOME PAGE */
 
+.squares.row {
+	margin: -4px -23px;
+}
+
 .squares .col-12{
 	padding: 0.5rem;
 }
