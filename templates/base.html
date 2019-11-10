@@ -58,7 +58,7 @@
                     <a class="nav-link" href="{% url 'all_ticket_stats' %}"><i class="fas fa-chart-area"></i> Stats</a>
                 </li>
                 {% endif %}
-                {% if perms.tickets.can_view_transaction_stats %}
+                {% if perms.tickets.can_view_transactions_stats %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'transaction_stats' %}"><i class="fas fa-chart-line"></i> Transactions</a>
                 </li>

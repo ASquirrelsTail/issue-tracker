@@ -243,7 +243,7 @@ Automated testing is carried out using the Django test-execution framework, whic
 
 #### Running Automated Tests Locally
 
-To run the tests locally install the dependencies from requirements.txt installed as described in the local deployment section, and set the SECRET_KEY environment variable be to something (literally anything).
+To run the tests locally install the dependencies from requirements.txt as described in the local deployment section, and set the SECRET_KEY environment variable be to something (literally anything).
 
 Tests for each app are broken up into individual files for each coresponding module to be tested, each app in the project has a series of test files, test_*.py which can be run as part of a full set of tests, or individually. To run the tests use the following command:
 ```
@@ -263,6 +263,14 @@ The javascript elements of the site were tested by using inputs with an expected
 For instance the chips list which is used to filter results was tested by inspecting the DOM for the hidden multi select it replaces to ensure that changes were accurately reflected in what the form would submit, and that the chips were updated correctly when the page loaded.
 
 The graphs generated for the stats pages were tested using known datasets, and checking they were reproduced as expected on the charts.
+
+#### Testing User Stories
+
+To test that the project fulfilled the needs of its anticipated users, I walked through each of their [user stories](https://github.com/ASquirrelsTail/issue-tracker/blob/master/preprod/ux.md#user-stories) to check their goals were simple to achieve. In order to do this I created a number of users, and using the admin panel assigned them to groups with corresponding permissions, such as the moderator group, which has permissions to edit comments and tickets, or the producers group, which can view stats for all tickets.
+
+I then completed the actions laid out in their user story to make sure it was possible, and the actions required made sense.
+
+For example, user MartinDirector (password c0de1nstitute, feel free to use this login to view the stats pages) has permissions to view stats for all tickets, and transaction stats. Using these stats pages, it's easy to see how much income is being generated, and assess the impact of the platform, which Martin could feed back to shareholders.
 
 #### Testing Stripe
 
