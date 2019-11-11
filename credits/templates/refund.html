@@ -2,7 +2,7 @@
 {% load bootstrap4 %}
 {% block title %}Refund last transaction{% endblock %}
 {% block content %}
-<section class="content">
+<section class="content row">
     <div class="col-12">
 {% if transaction is not None %}
     {% if transaction.can_refund %}
