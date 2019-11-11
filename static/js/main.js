@@ -11,7 +11,7 @@ function selectToChips(selectID, chipsID) {
 
     $('#' + chipsID + ' .chip').on('click', function() {
         let chip = $(this)
-        let option = $('#' + selectID + ' option[value="' + chip.data('value') + '"');
+        let option = $('#' + selectID + ' option[value="' + chip.data('value') + '"]');
         option.prop('selected', !option.prop('selected'));
         chip.toggleClass('selected');
     });

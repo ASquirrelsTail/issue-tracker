@@ -282,7 +282,7 @@ Instead it was simpler to manually test payments and refunds by performing the r
 
 Navigating back after completing the payment process will return the user to the payment page for the completed transaction, however attempting to pay again will fail as Stripe won't allow the payment to be completed twice. The user is informed of this error when the payment fails, but it is not made clear as to why they have recieved the error. Not a critical issue, and one that in practice shouldn't arise too often.
 
-Use of the Javascript let keyword prevent the site working on older versions of Internet Explorer, and the use of Arrow functions in the stats pages mean they won't function at all in Internet Explorer, however users in the target audience are unlikely to be using these browsers.
+Use of the Javascript let keyword prevents the site working on older versions of Internet Explorer, and the use of Arrow functions in the stats pages mean they won't function at all in Internet Explorer, however users in the target audience are unlikely to be using these browsers.
 
 ## Credits
 
