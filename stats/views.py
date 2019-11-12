@@ -2,7 +2,7 @@ from django.views.generic.base import TemplateView, ContextMixin
 from django.views.generic import DetailView
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Avg, Sum, Count, TextField, DateField, F
-from django.db.models.functions import Cast, TruncDay
+from django.db.models.functions import Cast, TruncDay, Coalesce
 from django.utils import timezone
 from django.urls import reverse_lazy
 from django.http import JsonResponse
@@ -94,8 +94,8 @@ class IndexView(TemplateView, ContextMixin):
         except NotImplementedError:
             pass
         try:
-            context['most_requested_feature_url'] = Ticket.objects.exclude(approved=None).filter(done=None, ticket_type='Feature').annotate(votes=Sum('vote__count')) \
-                .order_by('votes')[0].get_absolute_url()
+            context['most_requested_feature_url'] = Ticket.objects.exclude(approved=None).filter(done=None, ticket_type='Feature') \
+                .annotate(vote_count=Coalesce(Sum('vote__count'), 0)).order_by('-vote_count')[0].get_absolute_url()
         except (IndexError, Ticket.DoesNotExist):
             context['most_requested_feature_url'] = None
         return context

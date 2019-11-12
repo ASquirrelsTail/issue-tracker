@@ -511,14 +511,14 @@ class TicketListViewTestCase(TicketsTestCase):
         '''
         Ordering results by most votes should return tickets with the most votes first.
         '''
-        response = self.client.get('/tickets/?order_by=-votes')
+        response = self.client.get('/tickets/?order_by=-vote_count')
         self.assertOrderedBy(response.context['object_list'], 'no_votes')
 
     def test_get_tickets_list_order_by_most_views(self):
         '''
         Ordering results by most views should return tickets with the most views first.
         '''
-        response = self.client.get('/tickets/?order_by=-views')
+        response = self.client.get('/tickets/?order_by=-view_count')
         self.assertOrderedBy(response.context['object_list'], 'no_views')
 
     def test_get_tickets_list_order_by_most_comments(self):
@@ -618,11 +618,11 @@ class TicketListViewTestCase(TicketsTestCase):
         response = self.client.get('/tickets/?ticket_type=Bug&page=2')
         self.assertEqual('?ticket_type=Bug&page=', response.context['query_string'])
 
-        response = self.client.get('/tickets/?order_by=-votes&ticket_type=Bug')
-        self.assertEqual('?order_by=-votes&ticket_type=Bug&page=', response.context['query_string'])
+        response = self.client.get('/tickets/?order_by=-vote_count&ticket_type=Bug')
+        self.assertEqual('?order_by=-vote_count&ticket_type=Bug&page=', response.context['query_string'])
 
-        response = self.client.get('/tickets/?order_by=-votes&status=approved&ticket_type=Bug')
-        self.assertEqual('?order_by=-votes&status=approved&ticket_type=Bug&page=', response.context['query_string'])
+        response = self.client.get('/tickets/?order_by=-vote_count&status=approved&ticket_type=Bug')
+        self.assertEqual('?order_by=-vote_count&status=approved&ticket_type=Bug&page=', response.context['query_string'])
 
 
 class LabelViewsTestCase(TestCase):

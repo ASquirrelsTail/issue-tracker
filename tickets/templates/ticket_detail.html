@@ -4,7 +4,7 @@
 {% block content %}
 <article class="row content">
     <div class="col-12">
-        <h1>{{ object }}{% if object.status != 'awaiting approval' %} - {{ object.status|capfirst }}{% endif %}</h1>
+        <h1>{{ object }}{% if object.status != 'awaiting approval' and object.status != 'approved' %} - {{ object.status|capfirst }}{% endif %}</h1>
         {% if object.status == 'awaiting approval' %}
         <div class="col-12 alert alert-warning">
             <h2 class="d-inline-block">{{ object.status|capfirst }}</h2>

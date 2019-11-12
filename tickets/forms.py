@@ -15,8 +15,8 @@ class FilterForm(forms.Form):
     ORDER_BY_CHOICES = (
         ('', 'Most Recent'),
         ('created', 'Oldest'),
-        ('-votes', 'Most Votes'),
-        ('-views', 'Most Viewed'),
+        ('-vote_count', 'Most Votes'),
+        ('-view_count', 'Most Viewed'),
         ('-comment_count', 'Most Comments'),
     )
 

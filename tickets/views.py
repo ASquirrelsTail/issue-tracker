@@ -8,6 +8,7 @@ from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.db.models import Q, Count, Sum
+from django.db.models.functions import Coalesce
 from django.http import HttpResponseBadRequest
 from tickets.models import Ticket, Comment, Pageview, Label
 from tickets.forms import CommentForm, TicketForm, FeatureForm, BugForm, VoteForm, FilterForm, LabelForm
@@ -70,8 +71,13 @@ class TicketsListView(ListView):
                     queryset = queryset.filter(labels__in=[label])
 
             if filters['order_by']:
-                if filters['order_by'] != 'created':
-                    queryset = queryset.annotate(views=Count('pageview'), votes=Sum('vote__count'), comment_count=Count('comment'))
+                if filters['order_by'] == '-view_count':
+                    queryset = queryset.annotate(view_count=Count('pageview'))
+                elif filters['order_by'] == '-vote_count':
+                    queryset = queryset.annotate(vote_count=Coalesce(Sum('vote__count'), 0))
+                elif filters['order_by'] == '-comment_count':
+                    queryset = queryset.annotate(comment_count=Count('comment'))
+
                 queryset = queryset.order_by(filters['order_by'])
 
         return queryset

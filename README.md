@@ -290,5 +290,6 @@ Use of the Javascript let keyword prevents the site working on older versions of
 
 - [This answer](https://stackoverflow.com/a/49129560) to why queryset comparison assertions were failing in tests was a lifesaver.
 - [This answer](https://stackoverflow.com/a/27315856) on setting a class based view to CSRF exempt helped get the Stripe webhooks working.
+- [This answer](https://stackoverflow.com/questions/6160648/annotating-a-sum-results-in-none-rather-than-zero) on fixing sums returning None in annotations helped fix a bug in counting and ordering by number of votes.
 - [This post](https://www.ianlewis.org/en/testing-django-views-without-using-test-client) on testing views without URLs was useful for testing abstract views and mixins.
 - [This thread](https://stackoverflow.com/questions/46039315/how-can-i-style-a-stripe-elements-input-with-bootstrap) was helpful to get started styling the stripe card input on the payment page.
