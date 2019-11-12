@@ -10,33 +10,33 @@
 <section class="content row">
     <div class="col-12">
         <h1>Transaction Stats {{ date_range }}</h1>
-    </div>
-    <div class="row">
-        <div class="col-12 col-md-6 order-1 order-md-6">
-            <!-- Date filter form -->
-            <form action="" method="GET">
-                <div class="col-12">
-                    <div class="row">
-                        <div class="col-12 col-md-6">
-                            {% bootstrap_field date_range_form.start_date field_class='datepicker' %}
-                        </div>
-                        <div class="col-12 col-md-6">
-                            {% bootstrap_field date_range_form.end_date field_class='datepicker' %}
-                        </div>
-                        <div class="col-12 text-center">
-                            {% buttons %}
-                            <button type="submit" class="btn btn-primary w-75">Filter</button>
-                            {% endbuttons %}
+        <div class="row">
+            <div class="col-12 col-md-6 order-1 order-md-6">
+                <!-- Date filter form -->
+                <form action="" method="GET">
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-12 col-md-6">
+                                {% bootstrap_field date_range_form.start_date field_class='datepicker' %}
+                            </div>
+                            <div class="col-12 col-md-6">
+                                {% bootstrap_field date_range_form.end_date field_class='datepicker' %}
+                            </div>
+                            <div class="col-12 text-center">
+                                {% buttons %}
+                                <button type="submit" class="btn btn-primary w-75">Filter</button>
+                                {% endbuttons %}
+                            </div>
                         </div>
                     </div>
-                </div>
-            </form>
-        </div>
-        <!-- Composite Chart -->
-        <div id="chart" class="col-12 order-2"></div>
-        <div class="col-12 col-md-6 order-3 d-flex flex-column flex-sm-row flex-md-column flex-lg-row flex-wrap">
-            <span class="key key-green">£<span id="total-sales"></span> Sales</span>
-            <span class="key key-pink">£<span id="total-refunds"></span> Refunds</span>
+                </form>
+            </div>
+            <!-- Composite Chart -->
+            <div id="chart" class="col-12 order-2"></div>
+            <div class="col-12 col-md-6 order-3 d-flex flex-column flex-sm-row flex-md-column flex-lg-row flex-wrap">
+                <span class="key key-green">£<span id="total-sales"></span> Sales</span>
+                <span class="key key-pink">£<span id="total-refunds"></span> Refunds</span>
+            </div>
         </div>
     </div>
 </section>
