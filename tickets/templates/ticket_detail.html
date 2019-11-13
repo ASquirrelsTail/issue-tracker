@@ -219,6 +219,7 @@
 <!-- Image Modal -->
 <div class="modal fade lightbox" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
+        <p class="sr-only" id="imageModalLabel">Attached image for {{ object }}</p>
         <img src="{{ object.image.url }}" alt="Attached image for {{ object }}" class="img-fluid">
     </div>
 </div>

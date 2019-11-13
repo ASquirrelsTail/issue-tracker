@@ -13,7 +13,7 @@
         <div class="row">
             <div class="col-12 col-md-6 order-1 order-md-6">
                 <!-- Date filter form -->
-                <form action="" method="GET">
+                <form method="GET">
                     <div class="col-12">
                         <div class="row">
                             <div class="col-12 col-md-6">
@@ -42,11 +42,11 @@
 </section>
 {% endblock %}
 {% block javascript %}
-    <script src="{% static 'js/libs/d3.js' %}" type="text/javascript"></script>
-    <script src="{% static 'js/libs/crossfilter.js' %}" type="text/javascript"></script>
-    <script src="{% static 'js/libs/dc.js' %}" type="text/javascript"></script>
-    <script src="{% static 'js/libs/jquery-ui.js' %}" type="text/javascript"></script>
-    <script src="{% static 'js/stats.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/libs/d3.js' %}"></script>
+    <script src="{% static 'js/libs/crossfilter.js' %}"></script>
+    <script src="{% static 'js/libs/dc.js' %}"></script>
+    <script src="{% static 'js/libs/jquery-ui.js' %}"></script>
+    <script src="{% static 'js/stats.js' %}"></script>
     <script>
         let dataset = {{ chart_data|safe }};
 

@@ -15,7 +15,7 @@
                 <h2>Filters <span>[{% if filter_form.has_changed %}-{% else %}+{% endif %}]</span></h2>
             </a>
             <div id="filters" class="collapse {% if filter_form.has_changed %}show{% endif %}">
-                <form id="filter-form" action="" method="GET">
+                <form id="filter-form" method="GET">
                     <div class="row">
                         <div class="col-12 col-lg-6">
                             {% bootstrap_form filter_form exclude="labels" %}
