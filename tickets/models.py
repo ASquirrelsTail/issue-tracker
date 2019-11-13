@@ -175,9 +175,9 @@ class Vote(models.Model):
 class Comment(models.Model):
     ticket = models.ForeignKey(Ticket)
     user = models.ForeignKey(User)
-    reply_to = models.ForeignKey('self', on_delete=models.CASCADE, null=True, default=None, related_name='reply_to_set')
+    reply_to = models.ForeignKey('self', on_delete=models.CASCADE, null=True, default=None, blank=True, related_name='reply_to_set')
     created = models.DateTimeField(auto_now_add=True)
-    edited = models.DateTimeField(null=True, default=None)
+    edited = models.DateTimeField(null=True, default=None, blank=True)
     content = models.TextField()
 
     class Meta:
