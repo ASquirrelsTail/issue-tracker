@@ -10,28 +10,36 @@
             <h2 class="d-inline-block">{{ object.status|capfirst }}</h2>
         </div>
         {% endif %}
-        <div class="col-12 ticket-details">
-            <div><b>Views:</b> {{ object.no_views }}</div>
-            <div><b>Votes:</b> {{ object.no_votes }}</div>
-            <div><b>Comments:</b> {{ object.no_comments }}</div>
-            <div>
-                {% if perms.tickets.can_update_status %}
-                    {% if object.approved is None %}
-                        <form class="d-inline-block" action="{% url 'approve-ticket' pk=object.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary"><i class="far fa-thumbs-up"></i> Approve</button>
-                        </form>
-                    {% elif object.doing is None %}
-                        <form class="d-inline-block" action="{% url 'doing-ticket' pk=object.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-ellipsis-h"></i> Doing</button>
-                        </form>
-                    {% elif object.done is None %}
-                        <form class="d-inline-block" action="{% url 'done-ticket' pk=object.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Done</button>
-                        </form>
+        <div class="row d-flex align-items-center mb-2">
+            <div class="col-12 col-lg-6 ticket-details">
+                <div><b>Views:</b> {{ object.no_views }}</div>
+                <div><b>Votes:</b> {{ object.no_votes }}</div>
+                <div><b>Comments:</b> {{ object.no_comments }}</div>
+                <div>
+                    {% if perms.tickets.can_update_status %}
+                        {% if object.approved is None %}
+                            <form class="d-inline-block" action="{% url 'approve-ticket' pk=object.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary"><i class="far fa-thumbs-up"></i> Approve</button>
+                            </form>
+                        {% elif object.doing is None %}
+                            <form class="d-inline-block" action="{% url 'doing-ticket' pk=object.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-ellipsis-h"></i> Doing</button>
+                            </form>
+                        {% elif object.done is None %}
+                            <form class="d-inline-block" action="{% url 'done-ticket' pk=object.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Done</button>
+                            </form>
+                        {% endif %}
                     {% endif %}
+                </div>
+            </div>
+            <div class="col-12 col-lg-6 text-lg-right ticket-attribution">
+                Submitted by {{ object.user }} on {{ object.created|date:'d/m/y H:i' }}
+                {% if object.edited %}
+                <br>Last edit {{ object.edited|date:'d/m/y H:i' }}
                 {% endif %}
             </div>
         </div>
@@ -93,9 +101,7 @@
                 {% endif %}
             </div>
             <div class="col-12 col-md-6 text-right">
-                {% if object.edited %}
-                Last edit {{ object.edited|date:'d/m/y H:i' }}
-                {% endif %}
+                
                 {% if object.user == user or perms.tickets.can_edit_all_tickets %}
                 <a href="{% url 'edit-ticket' pk=object.id %}" class="btn btn-warning"><i class="fas fa-pen"></i> Edit Ticket</a>
                 <a href="{% url 'delete-ticket' pk=object.id %}" class="btn btn-danger btn-delete">Delete Ticket</a>

@@ -338,7 +338,10 @@ a:hover {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	margin-bottom: 1rem;
+}
+
+.ticket-attribution {
+	font-size: 0.85em;
 }
 
 .ticket-details div {
