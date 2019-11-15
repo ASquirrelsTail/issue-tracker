@@ -171,9 +171,9 @@ class AllTicketStatsView(PermissionRequiredMixin, TemplateView, DateRangeMixin):
 
         context['awaiting_approval'] = Ticket.objects.filter(approved=None).count()
         context['top_5_features'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Feature', done=None) \
-            .annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
+            .annotate(vote_count=Coalesce(Sum('vote__count'), 0)).order_by('-vote_count')[:5]
         context['top_5_bugs'] = Ticket.objects.exclude(approved=None).filter(ticket_type='Bug', done=None) \
-            .annotate(votes=Sum('vote__count')).order_by('-votes')[:5]
+            .annotate(vote_count=Coalesce(Sum('vote__count'), 0)).order_by('-vote_count')[:5]
 
         chart_data = {}
         chart_data['bugs'] = self.get_date_range_and_annotate(Ticket.objects.filter(ticket_type='Bug'))
