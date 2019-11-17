@@ -43,6 +43,7 @@ A full breakdown of the UX process can be found [here](https://github.com/ASquir
 
 ### Features Left to Implement
 
+- Emails for password resets and notifications. Currently the console backend is used for emails.
 - A blog for developers to keep users up to date on the latest changes.
 - Text search, to find a particular bug or feature.
 - Duplication checking, to help users and admins prevent multiple requests for the same things, and the ability to merge tickets when they do.
@@ -239,7 +240,7 @@ Due to the use of certain APIs and functions some parts of the site are more dif
 
 ### Automated Testing
 
-Automated testing is carried out using the Django test-execution framework, which is based on the unittest module. Continuous integration testing was used by linking the project's GitHub repository to [Travis CI](https://travis-ci.org/), so tests are run automatically whenever commits are pushed.
+Automated testing is carried out using the Django test-execution framework, which is based on the unittest module. Continuous integration testing was used by linking the project's GitHub repository to [Travis CI](https://travis-ci.org/), so tests are run automatically whenever commits are pushed. The automated tests covered models, forms and views, testing functionality that has been added on top of basic Django classes.
 
 #### Running Automated Tests Locally
 
