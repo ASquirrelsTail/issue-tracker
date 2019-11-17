@@ -168,7 +168,7 @@ On this page you'll be given a webhook signing secret key, to verify it is Strip
 
 ### Local Deployment
 
-After downloading the project, set up the database, S3 and Stripe and setting the associated environment variables by following the instructions above. Ommiting them will not stop the site from working, but some functionality will be missing. You'll also need to set a secret key environment variable called SECRET_KEY.
+After downloading the project, set up the database, S3 and Stripe and setting the associated environment variables by following the instructions above. Ommiting them will not stop the site from working, but some functionality will be missing. You'll also need to set a secret key environment variable called SECRET_KEY, and if you aren't using S3, setting an environment variable called DEBUG to true will be required to access static files locally.
 
 Next install the required python modules from the requirements.txt file using pip3.
 ```
