@@ -148,7 +148,11 @@ function createTotalCounts(ndx, prefix, keys, decimals=0) {
 
 $(() => {
     // Set up date pickers
-    $('.datepicker input').datepicker({dateFormat: 'yy-mm-dd'});
+    $('.datepicker input').datepicker({dateFormat: 'yy-mm-dd', maxDate: new Date()});
+    $('#id_end_date').on('change', () => {
+        $('#id_start_date').datepicker('option', 'maxDate', new Date($('#id_end_date').val()))
+    });
+    $('#id_start_date').datepicker('option', 'maxDate', new Date($('#id_end_date').val()));
 
     $(window).on('resize', () => {
         dc.renderAll();

@@ -127,10 +127,12 @@ class DateRangeMixin(ContextMixin):
     def get_context_data(self, **kwargs):
         self.get_form_kwargs()
         context = super(DateRangeMixin, self).get_context_data(**kwargs)
-        context['date_range'] = 'For This Week' if not self.form.has_changed() else \
-            'Between {:%d/%m/%y}-{:%d/%m/%y}'.format(self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
-        context['date_range_form'] = DateRangeForm(initial={'start_date': self.form.cleaned_data.get('start_date'),
-                                                            'end_date': self.form.cleaned_data.get('end_date')})
+        if self.form.is_valid():
+            context['date_range'] = 'For This Week' if not self.form.has_changed() else \
+                'Between {:%d/%m/%y}-{:%d/%m/%y}'.format(self.form.cleaned_data.get('start_date'), self.form.cleaned_data.get('end_date'))
+        context['date_range_form'] = self.form if self.form.has_changed() else \
+            DateRangeForm(initial={'start_date': self.form.cleaned_data.get('start_date'),
+                                   'end_date': self.form.cleaned_data.get('end_date')})
 
         return context
 
